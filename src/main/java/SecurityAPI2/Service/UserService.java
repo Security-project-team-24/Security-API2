@@ -18,6 +18,9 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -38,5 +41,16 @@ public class UserService {
         user.setStatus(Status.PENDING);
         userRepository.save(user);
         return registerDto;
+    }
+
+    public List<User> findAll() {
+       return userRepository.findAll();
+    }
+    public User update(final User newUser) {
+        final User user = userRepository.findById(newUser.getId()).get();
+        newUser.setPassword(user.getPassword());
+        newUser.setEmail(user.getEmail());
+        newUser.setRole(user.getRole());
+        return userRepository.save(newUser);
     }
 }
