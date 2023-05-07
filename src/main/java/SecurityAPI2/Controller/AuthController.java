@@ -7,16 +7,14 @@ import SecurityAPI2.Dto.RegisterDto;
 import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -45,5 +43,18 @@ public class AuthController {
         }
         RegisterDto register = userService.register(registerDto);
         return ResponseEntity.ok(register);
+    }
+
+    @GetMapping("/current")
+    public ResponseEntity<?> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
+        if (authHeader.length() > 7) {
+            try {
+                return ResponseEntity.ok(jwtUtils.getUserFromToken(authHeader));
+            } catch (final Exception e) {
+                return null;
+            }
+
+        }
+        return ResponseEntity.status(401).build();
     }
 }
