@@ -1,5 +1,7 @@
 package SecurityAPI2.Service;
 
+import SecurityAPI2.Dto.PasswordChangeDto;
+import SecurityAPI2.Exceptions.IncorrectPassword;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,10 @@ public class UserService {
         }
         User user = new User(registerDto.getEmail(), encoder.encode(registerDto.getPassword()), registerDto.getName(), registerDto.getSurname(),
                 registerDto.getPhoneNumber(), registerDto.getRole(), registerDto.getAddress());
+        if (user.getRole() == Role.ADMIN)
+            user.setFirstLogged(true);
+        else
+            user.setFirstLogged(false);
         user.setStatus(Status.PENDING);
         userRepository.save(user);
         return registerDto;
@@ -52,5 +58,17 @@ public class UserService {
         newUser.setEmail(user.getEmail());
         newUser.setRole(user.getRole());
         return userRepository.save(newUser);
+    }
+
+    public void changePassword(final User user, final PasswordChangeDto passwordChangeDto) {
+        if (!encoder.matches(passwordChangeDto.getOldPassword(), user.getPassword())) {
+            throw new IncorrectPassword();
+        }
+        if(!passwordChangeDto.getConfirmPassword().equals(passwordChangeDto.getNewPassword())){
+            throw new InvalidConfirmPassword();
+        }
+        user.setPassword(encoder.encode(passwordChangeDto.getNewPassword()));
+        user.setFirstLogged(false);
+        userRepository.save(user);
     }
 }

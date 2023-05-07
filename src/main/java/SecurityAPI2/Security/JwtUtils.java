@@ -59,9 +59,9 @@ public class JwtUtils {
 		} catch (final MalformedJwtException e) {
 			System.out.println("Invalid JWT token: " + e.getMessage());
 		} catch (final ExpiredJwtException e) {
-			System.out.println("JWT token is expired: " + e.getMessage());
+			System.out.println("Token expired " + e.getMessage());
 		} catch (final UnsupportedJwtException e) {
-			System.out.println("JWT token is unsupported: " + e.getMessage());
+			System.out.println("Unsupported token " + e.getMessage());
 		} catch (final IllegalArgumentException e) {
 			System.out.println("JWT claims string is empty: " + e.getMessage());
 		}

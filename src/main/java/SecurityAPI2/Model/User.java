@@ -36,6 +36,8 @@ public class User {
     private Address address;
     @Column(name = "status")
     private Status status;
+    @Column(name = "firstLogged")
+    boolean firstLogged;
 
     public User(String email, String password, String name, String surname, String phoneNumber, Role role, Address address){
         this.email = email;
