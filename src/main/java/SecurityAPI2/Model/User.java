@@ -1,5 +1,6 @@
 package SecurityAPI2.Model;
 
+import SecurityAPI2.Model.Enum.Status;
 import lombok.*;
 import SecurityAPI2.Model.Enum.Role;
 import org.hibernate.annotations.GenericGenerator;
@@ -30,4 +31,19 @@ public class User {
     private String phoneNumber;
     @Column(name = "role")
     private Role role;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id", referencedColumnName = "id")
+    private Address address;
+    @Column(name = "status")
+    private Status status;
+
+    public User(String email, String password, String name, String surname, String phoneNumber, Role role, Address address){
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.surname = surname;
+        this.phoneNumber = phoneNumber;
+        this.role = role;
+        this.address = address;
+    }
 }
