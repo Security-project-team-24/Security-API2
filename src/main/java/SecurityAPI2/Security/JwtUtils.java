@@ -21,17 +21,22 @@ public class JwtUtils {
 	@Autowired
 	private UserService userService;
 	private final String jwtSecret = "SecuritySecret";
+	private final int accessTokenExpirationMs = 1000 * 60 * 15; //15 min
+	private final int refreshTokenExpirationMs = 1000 * 60 * 60 * 2; //2 sata
 
-	private final int jwtExpirationMs = 1000 * 60 * 15; //15 min
+	public String generateAccessToken(final Authentication authentication) {
+		return generateToken(authentication, accessTokenExpirationMs);
+	}
 
-	public String generateJwtToken(final Authentication authentication) {
-
+	public String generateRefreshToken(final Authentication authentication) {
+		return generateToken(authentication, refreshTokenExpirationMs);
+	}
+	public String generateToken(final Authentication authentication, int expirationMs) {
 		final UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-
 		return Jwts.builder()
 			.setSubject(userPrincipal.getEmail())
 			.setIssuedAt(new Date())
-			.setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+			.setExpiration(new Date((new Date()).getTime() + expirationMs))
 			.signWith(SignatureAlgorithm.HS512, jwtSecret)
 			.compact();
 	}
