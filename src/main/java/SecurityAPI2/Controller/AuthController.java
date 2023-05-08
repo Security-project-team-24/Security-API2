@@ -1,6 +1,8 @@
 package SecurityAPI2.Controller;
 
 import SecurityAPI2.Dto.TokenDto;
+import SecurityAPI2.Dto.UserDto;
+import SecurityAPI2.Mapper.UserMapper;
 import SecurityAPI2.Security.JwtUtils;
 import SecurityAPI2.Dto.LoginDto;
 import SecurityAPI2.Dto.RegisterDto;
@@ -26,6 +28,8 @@ public class AuthController {
     @Autowired
     AuthenticationManager authenticationManager;
     @Autowired
+    private UserMapper userMapper;
+    @Autowired
     JwtUtils jwtUtils;
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody final LoginDto loginRequest) {
@@ -37,12 +41,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterDto> register(@Valid @RequestBody RegisterDto registerDto, Errors errors) {
+    public ResponseEntity<UserDto> register(@Valid @RequestBody RegisterDto registerDto, Errors errors) {
         if(errors.hasErrors()){
             throw new InvalidPasswordFormatException();
         }
-        RegisterDto register = userService.register(registerDto);
-        return ResponseEntity.ok(register);
+        UserDto userDto = userMapper.userToUserDto(userService.register(registerDto));
+        return ResponseEntity.ok(userDto);
     }
 
     @GetMapping("/current")

@@ -1,14 +1,16 @@
 package SecurityAPI2.Service;
 
 import SecurityAPI2.Dto.PasswordChangeDto;
+import SecurityAPI2.Dto.SkillDto;
 import SecurityAPI2.Dto.UserDto;
 import SecurityAPI2.Exceptions.IncorrectPassword;
-import SecurityAPI2.Model.User;
+import SecurityAPI2.Model.*;
+import SecurityAPI2.Repository.IEngineerRepository;
+import SecurityAPI2.Repository.ISkillRepository;
 import SecurityAPI2.Repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import SecurityAPI2.Dto.RegisterDto;
 import SecurityAPI2.Exceptions.InvalidConfirmPassword;
-import SecurityAPI2.Model.Address;
 import SecurityAPI2.Model.Enum.Role;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
@@ -30,12 +32,16 @@ public class UserService {
     @Autowired
     private IUserRepository userRepository;
     @Autowired
+    private ISkillRepository skillRepository;
+    @Autowired
+    private IEngineerRepository engineerRepository;
+    @Autowired
     private BCryptPasswordEncoder encoder;
     public User findByEmail(final String email) {
         return userRepository.findByEmail(email);
     }
 
-    public RegisterDto register(RegisterDto registerDto) {
+    public User register(RegisterDto registerDto) {
         if(!registerDto.getConfirmPassword().equals(registerDto.getPassword())){
             throw new InvalidConfirmPassword();
         }
@@ -46,8 +52,10 @@ public class UserService {
         else
             user.setFirstLogged(false);
         user.setStatus(Status.PENDING);
-        userRepository.save(user);
-        return registerDto;
+        if(user.getRole() == Role.ENGINEER){
+            engineerRepository.save(new Engineer(user));
+        }
+        return userRepository.save(user);
     }
 
     public List<User> findAll() {
@@ -76,6 +84,16 @@ public class UserService {
         }
         user.setPassword(encoder.encode(passwordChangeDto.getNewPassword()));
         user.setFirstLogged(false);
+        userRepository.save(user);
+    }
+
+    public void addSkill(SkillDto skillDto, User user){
+        Engineer engineer = engineerRepository.findByUser(user);
+        ArrayList<Skill> skills = new ArrayList<>();
+        for(Skill s : skillDto.getSkills()){
+            skills.add(new Skill(s.getSkill(), s.getStrength(), engineer));
+        }
+        engineer.setSkills(skills);
         userRepository.save(user);
     }
 }

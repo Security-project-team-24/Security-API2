@@ -1,6 +1,7 @@
 package SecurityAPI2.Controller;
 
 import SecurityAPI2.Dto.PasswordChangeDto;
+import SecurityAPI2.Dto.SkillDto;
 import SecurityAPI2.Dto.UserDto;
 import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Mapper.UserMapper;
@@ -43,4 +44,12 @@ public class UserController {
         userService.changePassword(user, passwordChangeDto);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/skill")
+    public ResponseEntity addSkill(@RequestBody SkillDto skillDto,  @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
+        final User user = jwtUtils.getUserFromToken(authHeader);
+        userService.addSkill(skillDto, user);
+        return ResponseEntity.ok().build();
+    }
+
 }
