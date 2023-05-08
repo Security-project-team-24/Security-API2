@@ -4,6 +4,7 @@ import SecurityAPI2.Dto.PasswordChangeDto;
 import SecurityAPI2.Dto.SkillDto;
 import SecurityAPI2.Dto.UserDto;
 import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
+import SecurityAPI2.Exceptions.SkillValueInvalid;
 import SecurityAPI2.Mapper.UserMapper;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Security.JwtUtils;
@@ -46,7 +47,11 @@ public class UserController {
     }
 
     @PostMapping("/skill")
-    public ResponseEntity addSkill(@RequestBody SkillDto skillDto,  @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
+    public ResponseEntity addSkill(@Valid @RequestBody SkillDto skillDto, Errors errors, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
+        System.out.println(errors);
+        if(errors.hasErrors()){
+            throw new SkillValueInvalid();
+        }
         final User user = jwtUtils.getUserFromToken(authHeader);
         userService.addSkill(skillDto, user);
         return ResponseEntity.ok().build();
