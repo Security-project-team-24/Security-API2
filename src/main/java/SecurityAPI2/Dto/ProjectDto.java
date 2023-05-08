@@ -1,6 +1,7 @@
 package SecurityAPI2.Dto;
 
 import SecurityAPI2.Model.ProjectEmployee;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,5 +15,5 @@ public class ProjectDto {
     Long id;
     String name;
     double duration;
-    List<ProjectEmployee> projectEmployees;
+    List<ProjectEmployeeDto> projectEmployees;
 }

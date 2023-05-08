@@ -1,5 +1,6 @@
 package SecurityAPI2.Model;
 
+import SecurityAPI2.Model.Enum.Role;
 import lombok.*;
 
 import javax.persistence.*;
@@ -22,4 +23,9 @@ public class ProjectEmployee {
     @ManyToOne
     @JoinColumn(name = "project_id")
     private Project project;
+    public ProjectEmployee(User employee, Project project, String jobDescription){
+        this.employee = employee;
+        this.project = project;
+        this.jobDescription = jobDescription;
+    }
 }

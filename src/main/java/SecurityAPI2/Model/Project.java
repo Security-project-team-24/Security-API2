@@ -1,5 +1,6 @@
 package SecurityAPI2.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -20,6 +21,7 @@ public class Project {
     @Column(name = "duration")
     private double duration;
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<ProjectEmployee> projectEmployees;
 
 }
