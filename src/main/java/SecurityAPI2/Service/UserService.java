@@ -1,6 +1,7 @@
 package SecurityAPI2.Service;
 
 import SecurityAPI2.Dto.PasswordChangeDto;
+import SecurityAPI2.Dto.UserDto;
 import SecurityAPI2.Exceptions.IncorrectPassword;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Repository.IUserRepository;
@@ -54,10 +55,16 @@ public class UserService {
     }
     public User update(final User newUser) {
         final User user = userRepository.findById(newUser.getId()).get();
-        newUser.setPassword(user.getPassword());
-        newUser.setEmail(user.getEmail());
-        newUser.setRole(user.getRole());
-        return userRepository.save(newUser);
+        user.setName(newUser.getName());
+        user.setSurname(newUser.getSurname());
+        user.setPhoneNumber(newUser.getPhoneNumber());
+        user.getAddress().setStreet(newUser.getAddress().getStreet());
+        user.getAddress().setStreetNumber(newUser.getAddress().getStreetNumber());
+        user.getAddress().setCity(newUser.getAddress().getCity());
+        user.getAddress().setZipCode(newUser.getAddress().getZipCode());
+        user.getAddress().setCountry(newUser.getAddress().getCountry());
+
+        return userRepository.save(user);
     }
 
     public void changePassword(final User user, final PasswordChangeDto passwordChangeDto) {

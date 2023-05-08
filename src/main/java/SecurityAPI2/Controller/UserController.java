@@ -30,8 +30,8 @@ public class UserController {
        return ResponseEntity.ok(userMapper.usersToUserDtos(userService.findAll()));
     }
     @PatchMapping("/update")
-    public ResponseEntity<User> update(@RequestBody final UserDto userDto) {
-        return ResponseEntity.ok(userService.update(userMapper.userDtoToUser(userDto)));
+    public ResponseEntity<UserDto> update(@RequestBody final UserDto userDto) {
+        return ResponseEntity.ok(userMapper.userToUserDto(userService.update(userMapper.userDtoToUser(userDto))));
     }
 
     @PutMapping("/change-password")
