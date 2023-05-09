@@ -1,11 +1,13 @@
 package SecurityAPI2.Model;
 
 import SecurityAPI2.Model.Enum.Status;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import SecurityAPI2.Model.Enum.Role;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -36,6 +38,9 @@ public class User {
     private Address address;
     @Column(name = "status")
     private Status status;
+    @Column(name = "firstLogged")
+    boolean firstLogged;
+
 
     public User(String email, String password, String name, String surname, String phoneNumber, Role role, Address address){
         this.email = email;
