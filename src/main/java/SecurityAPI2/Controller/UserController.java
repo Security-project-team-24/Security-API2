@@ -12,6 +12,7 @@ import SecurityAPI2.Security.JwtUtils;
 import SecurityAPI2.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
@@ -39,10 +40,26 @@ public class UserController {
        dto.setTotalPages(userPage.getTotalPages());
        return ResponseEntity.ok(dto);
     }
+    @GetMapping("/pending")
+    public ResponseEntity<List<UserDto>> findPendingUsers() {
+        return ResponseEntity.ok(userMapper.usersToUserDtos(userService.findPendingUsers()));
+    }
     @PatchMapping("/update")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('ENGINEER') or hasAuthority('PROJECTMANAGER') or hasAuthority('HRMANAGER')")
     public ResponseEntity<UserDto> update(@RequestBody final UserDto userDto) {
         return ResponseEntity.ok(userMapper.userToUserDto(userService.update(userMapper.userDtoToUser(userDto))));
+    }
+
+    @PatchMapping("/approve/{id}")
+    public ResponseEntity<Void> approve(@PathVariable Long id) {
+        userService.approve(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/disapprove/{id}/{reason}")
+    public ResponseEntity<Void> disapprove(@PathVariable Long id, @PathVariable final String reason) {
+        userService.disapprove(id,reason);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/change-password")
