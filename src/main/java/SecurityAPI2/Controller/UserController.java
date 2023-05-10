@@ -12,6 +12,7 @@ import SecurityAPI2.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,15 +29,18 @@ public class UserController {
     @Autowired
     JwtUtils jwtUtils;
     @GetMapping("/employees")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<UserDto>> findAll() {
        return ResponseEntity.ok(userMapper.usersToUserDtos(userService.findAll()));
     }
     @PatchMapping("/update")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('ENGINEER') or hasAuthority('PROJECTMANAGER') or hasAuthority('HRMANAGER')")
     public ResponseEntity<UserDto> update(@RequestBody final UserDto userDto) {
         return ResponseEntity.ok(userMapper.userToUserDto(userService.update(userMapper.userDtoToUser(userDto))));
     }
 
     @PutMapping("/change-password")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity changePassword(@Valid @RequestBody final PasswordChangeDto passwordChangeDto, Errors errors, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         if(errors.hasErrors()){
             throw new InvalidPasswordFormatException();
@@ -47,6 +51,7 @@ public class UserController {
     }
 
     @PostMapping("/skill")
+    @PreAuthorize("hasAuthority('ENGINEER')")
     public ResponseEntity addSkill(@Valid @RequestBody SkillDto skillDto, Errors errors, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
         System.out.println(errors);
         if(errors.hasErrors()){
