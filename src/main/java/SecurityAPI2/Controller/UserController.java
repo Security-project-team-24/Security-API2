@@ -1,5 +1,6 @@
 package SecurityAPI2.Controller;
 
+import SecurityAPI2.Dto.PageDto;
 import SecurityAPI2.Dto.PasswordChangeDto;
 import SecurityAPI2.Dto.SkillDto;
 import SecurityAPI2.Dto.UserDto;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -28,10 +30,14 @@ public class UserController {
     private UserMapper userMapper;
     @Autowired
     JwtUtils jwtUtils;
-    @GetMapping("/employees")
+    @GetMapping("/employees/{pageSize}/{pageNumber}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<List<UserDto>> findAll() {
-       return ResponseEntity.ok(userMapper.usersToUserDtos(userService.findAll()));
+    public ResponseEntity<PageDto<UserDto>> findAll(@Valid @PathVariable int pageSize, @Valid @PathVariable int pageNumber) {
+       Page<User> userPage = userService.findAll(pageSize, pageNumber);
+       PageDto<UserDto> dto = new PageDto<>();
+       dto.setContent(userMapper.usersToUserDtos(userPage.getContent()));
+       dto.setTotalPages(userPage.getTotalPages());
+       return ResponseEntity.ok(dto);
     }
     @PatchMapping("/update")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('ENGINEER') or hasAuthority('PROJECTMANAGER') or hasAuthority('HRMANAGER')")

@@ -16,6 +16,8 @@ import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -58,8 +60,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public List<User> findAll() {
-       return userRepository.findAll();
+    public Page<User> findAll(int pageNumber, int pageSize) {
+       return userRepository.findAll(PageRequest.of(pageSize, pageNumber));
     }
     public User update(final User newUser) {
         final User user = userRepository.findById(newUser.getId()).get();
