@@ -49,10 +49,6 @@ public class UserService {
         }
         User user = new User(registerDto.getEmail(), encoder.encode(registerDto.getPassword()), registerDto.getName(), registerDto.getSurname(),
                 registerDto.getPhoneNumber(), registerDto.getRole(), registerDto.getAddress());
-        if (user.getRole() == Role.ADMIN)
-            user.setFirstLogged(true);
-        else
-            user.setFirstLogged(false);
         user.setStatus(Status.PENDING);
         if(user.getRole() == Role.ENGINEER){
             engineerRepository.save(new Engineer(user));
