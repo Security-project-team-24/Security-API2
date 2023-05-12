@@ -4,22 +4,26 @@ import SecurityAPI2.Dto.PasswordChangeDto;
 import SecurityAPI2.Dto.SkillDto;
 import SecurityAPI2.Exceptions.IncorrectPassword;
 import SecurityAPI2.Exceptions.UserDoesntExistException;
+import SecurityAPI2.Exceptions.*;
 import SecurityAPI2.Model.*;
 import SecurityAPI2.Repository.IEngineerRepository;
 import SecurityAPI2.Repository.ISkillRepository;
 import SecurityAPI2.Repository.IUserRepository;
 import SecurityAPI2.utils.Email.EmailSender;
+import SecurityAPI2.utils.hmac.HmacGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import SecurityAPI2.Dto.RegisterDto;
-import SecurityAPI2.Exceptions.InvalidConfirmPassword;
 import SecurityAPI2.Model.Enum.Role;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.util.ThrowableCauseExtractor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +39,11 @@ public class UserService {
     private BCryptPasswordEncoder encoder;
     @Autowired
     private EmailSender emailSender;
+    @Autowired
+    private RegistrationDisapprovalService registrationDisapprovalService;
+    @Autowired
+    private RegistrationApprovalService registrationApprovalService;
+    
     public User findByEmail(final String email) {
         return userRepository.findByEmail(email);
     }
@@ -43,9 +52,15 @@ public class UserService {
         if(!registerDto.getConfirmPassword().equals(registerDto.getPassword())){
             throw new InvalidConfirmPassword();
         }
-        User user = new User(registerDto.getEmail(), encoder.encode(registerDto.getPassword()), registerDto.getName(), registerDto.getSurname(),
-                registerDto.getPhoneNumber(), registerDto.getRole(), registerDto.getAddress());
+        if(registrationDisapprovalService.isRegistrationDisapprovedInNearPast(registerDto.getEmail())){
+            throw new RegistrationDisapprovedInNearPastException();
+        }
+        User user = new User(registerDto.getEmail(), encoder.encode(registerDto.getPassword()), registerDto.getName(),
+                registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getRole(), registerDto.getAddress());
+        
+        user.setFirstLogged(user.getRole() == Role.ADMIN);
         user.setStatus(Status.PENDING);
+        user.setActivated(false);
         if(user.getRole() == Role.ENGINEER){
             engineerRepository.save(new Engineer(user));
         }
@@ -61,7 +76,29 @@ public class UserService {
         final User user = userRepository.findById(id).get();
         user.setStatus(Status.APPROVED);
         userRepository.save(user);
-        emailSender.sendApprovedMail(user.getEmail());
+        RegistrationApproval registrationApproval = new RegistrationApproval(user);
+        registrationApproval = registrationApprovalService.save(registrationApproval);
+        String hmacToken = HmacGenerator.generate(generateApprovalHMACString(registrationApproval));
+        emailSender.sendApprovedMail(user.getEmail(),hmacToken,registrationApproval.getId());
+    }
+    public void activateAccount(String hmacToken,Long id){
+        RegistrationApproval registrationApproval = registrationApprovalService.findById(id);
+        String hmacTokenCheck = HmacGenerator.generate(generateApprovalHMACString(registrationApproval));
+        if(!hmacToken.equals(hmacTokenCheck)) throw new HmacTokenInvalidException();
+        if(registrationApproval.getDate().plusDays(1).isBefore(LocalDateTime.now())) throw new HmacTokenExpiredException();
+        User user = findByEmail(registrationApproval.getEmail());
+        user.setActivated(true);
+        if(user.getRole() == Role.ENGINEER){
+            Engineer engineer = engineerRepository.findByUser(user);
+            engineer.setSeniority(LocalDate.now());
+            engineerRepository.save(engineer);
+        }
+        userRepository.save(user);
+        registrationApprovalService.delete(registrationApproval);
+    }
+    private String generateApprovalHMACString(RegistrationApproval registrationApproval){
+        return registrationApproval.getId() + "|" + registrationApproval.getEmail() + "|" + registrationApproval.getPhoneNumber()
+                + "|" + registrationApproval.getName() + "|" + registrationApproval.getSurname() + "|" + registrationApproval.getRole();
     }
 
     public void disapprove(Long id, String reason) {
@@ -70,6 +107,7 @@ public class UserService {
         final User user = userRepository.findById(id).get();
         user.setStatus(Status.DISAPPROVED);
         userRepository.save(user);
+        registrationDisapprovalService.Create(new RegistrationDisapproval(0L,user.getEmail(),LocalDateTime.now()));
         emailSender.sendDisapprovedMail(reason,user.getEmail());
     }
 

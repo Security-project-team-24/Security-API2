@@ -62,6 +62,12 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/activate/{hmacToken}/{approvalId}")
+    public ResponseEntity<Void> activateAccount(@PathVariable Long approvalId, @PathVariable final String hmacToken) {
+        userService.activateAccount(hmacToken,approvalId);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping("/change-password")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity changePassword(@Valid @RequestBody final PasswordChangeDto passwordChangeDto, Errors errors, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
