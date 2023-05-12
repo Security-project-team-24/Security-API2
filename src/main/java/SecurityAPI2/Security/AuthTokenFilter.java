@@ -43,6 +43,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 			}
 		} catch (final Exception e) {
 			System.out.println("Cannot set user authentication: " + e.getMessage());
+			return;
 		}
 		filterChain.doFilter(request, response);
 	}
