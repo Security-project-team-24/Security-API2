@@ -11,6 +11,7 @@ import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -49,7 +50,6 @@ public class AuthController {
         UserDto userDto = userMapper.userToUserDto(userService.register(registerDto));
         return ResponseEntity.ok(userDto);
     }
-
     @GetMapping("/current")
     public ResponseEntity<UserDto> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         if (authHeader.length() > 7) {
