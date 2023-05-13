@@ -3,6 +3,7 @@ package SecurityAPI2.Controller;
 import SecurityAPI2.Dto.TokenDto;
 import SecurityAPI2.Dto.UserDto;
 import SecurityAPI2.Mapper.UserMapper;
+import SecurityAPI2.Model.User;
 import SecurityAPI2.Security.JwtUtils;
 import SecurityAPI2.Dto.LoginDto;
 import SecurityAPI2.Dto.RegisterDto;
@@ -50,10 +51,11 @@ public class AuthController {
     }
 
     @GetMapping("/current")
-    public ResponseEntity<?> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
+    public ResponseEntity<UserDto> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         if (authHeader.length() > 7) {
             try {
-                return ResponseEntity.ok(jwtUtils.getUserFromToken(authHeader));
+                User user = jwtUtils.getUserFromToken(authHeader);
+                return ResponseEntity.ok(userMapper.userToUserDto(user));
             } catch (final Exception e) {
                 return null;
             }

@@ -11,7 +11,10 @@ import SecurityAPI2.Repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjectEmployeeService {
@@ -31,5 +34,20 @@ public class ProjectEmployeeService {
 
     public List<ProjectEmployee> findAllEngineersOnProject(Long projectId){
         return projectEmployeeRepository.findByProjectIdAndEmployee_Role(projectId, Role.ENGINEER);
+    }
+
+    public List<User> findAllEmployeesNotWorkingOnProject(Long projectId){
+        List<Role> roles = Arrays.asList(Role.ENGINEER, Role.PROJECTMANAGER);
+        List<User> allEmployees = userRepository.findByRoleIn(roles);
+
+        Project project = projectRepository.findById(projectId).get();
+        List<User> projectEmployees = new ArrayList<>();
+        for (ProjectEmployee p: project.getProjectEmployees()) {
+            projectEmployees.add(p.getEmployee());
+        }
+        List<User> usersNotWorkingOnProject = allEmployees.stream()
+                .filter(user -> !projectEmployees.contains(user))
+                .collect(Collectors.toList());
+        return usersNotWorkingOnProject;
     }
 }

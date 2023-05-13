@@ -16,6 +16,8 @@ import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -47,10 +49,6 @@ public class UserService {
         }
         User user = new User(registerDto.getEmail(), encoder.encode(registerDto.getPassword()), registerDto.getName(), registerDto.getSurname(),
                 registerDto.getPhoneNumber(), registerDto.getRole(), registerDto.getAddress());
-        if (user.getRole() == Role.ADMIN)
-            user.setFirstLogged(true);
-        else
-            user.setFirstLogged(false);
         user.setStatus(Status.PENDING);
         if(user.getRole() == Role.ENGINEER){
             engineerRepository.save(new Engineer(user));
@@ -58,8 +56,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public List<User> findAll() {
-       return userRepository.findAll();
+    public Page<User> findAll(int pageNumber, int pageSize) {
+       return userRepository.findAll(PageRequest.of(pageSize, pageNumber));
     }
     public User update(final User newUser) {
         final User user = userRepository.findById(newUser.getId()).get();
