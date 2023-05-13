@@ -19,4 +19,5 @@ public class UserDto {
     Role role;
     Address address;
     Status status;
+    boolean firstLogged;
 }
