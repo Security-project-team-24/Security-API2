@@ -2,29 +2,24 @@ package SecurityAPI2.Service;
 
 import SecurityAPI2.Dto.PasswordChangeDto;
 import SecurityAPI2.Dto.SkillDto;
-import SecurityAPI2.Dto.UserDto;
 import SecurityAPI2.Exceptions.IncorrectPassword;
 import SecurityAPI2.Model.*;
 import SecurityAPI2.Repository.IEngineerRepository;
 import SecurityAPI2.Repository.ISkillRepository;
 import SecurityAPI2.Repository.IUserRepository;
+import SecurityAPI2.Service.Interfaces.IStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import SecurityAPI2.Dto.RegisterDto;
 import SecurityAPI2.Exceptions.InvalidConfirmPassword;
 import SecurityAPI2.Model.Enum.Role;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
-import SecurityAPI2.Repository.IUserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -37,6 +32,8 @@ public class UserService {
     private IEngineerRepository engineerRepository;
     @Autowired
     private BCryptPasswordEncoder encoder;
+    @Autowired
+    private IStorageService storageService;
     public User findByEmail(final String email) {
         return userRepository.findByEmail(email);
     }
@@ -95,5 +92,12 @@ public class UserService {
         }
         engineer.setSkills(skills);
         userRepository.save(user);
+    }
+
+    public void uploadCv(MultipartFile file, User user) throws IOException {
+        String url = storageService.uploadFile(file);
+        Engineer engineer = engineerRepository.findByUser(user);
+        engineer.setCvUrl(url);
+        engineerRepository.save(engineer);
     }
 }
