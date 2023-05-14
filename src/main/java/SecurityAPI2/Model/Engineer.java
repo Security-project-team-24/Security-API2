@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.List;
 @Getter
 @Setter
@@ -23,6 +24,8 @@ public class Engineer {
     private User user;
     @Column(name = "cvUrl", columnDefinition="TEXT")
     private String cvUrl;
+    @Column(name = "seniority", nullable = true)
+    private LocalDate seniority;
 
     public Engineer(User user){
         this.user = user;

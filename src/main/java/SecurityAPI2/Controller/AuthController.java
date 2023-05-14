@@ -3,6 +3,7 @@ package SecurityAPI2.Controller;
 import SecurityAPI2.Dto.TokenDto;
 import SecurityAPI2.Dto.UserDto;
 import SecurityAPI2.Mapper.UserMapper;
+import SecurityAPI2.Model.User;
 import SecurityAPI2.Security.JwtUtils;
 import SecurityAPI2.Dto.LoginDto;
 import SecurityAPI2.Dto.RegisterDto;
@@ -10,7 +11,9 @@ import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -48,12 +51,13 @@ public class AuthController {
         UserDto userDto = userMapper.userToUserDto(userService.register(registerDto));
         return ResponseEntity.ok(userDto);
     }
-
     @GetMapping("/current")
-    public ResponseEntity<?> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserDto> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         if (authHeader.length() > 7) {
             try {
-                return ResponseEntity.ok(jwtUtils.getUserFromToken(authHeader));
+                User user = jwtUtils.getUserFromToken(authHeader);
+                return ResponseEntity.ok(userMapper.userToUserDto(user));
             } catch (final Exception e) {
                 return null;
             }
