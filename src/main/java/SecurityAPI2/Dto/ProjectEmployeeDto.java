@@ -15,4 +15,5 @@ public class ProjectEmployeeDto {
     Long id;
     UserDto employee;
     String jobDescription;
+    Project project;
 }

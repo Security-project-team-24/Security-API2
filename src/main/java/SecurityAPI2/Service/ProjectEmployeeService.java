@@ -32,4 +32,14 @@ public class ProjectEmployeeService {
     public List<ProjectEmployee> findAllEngineersOnProject(Long projectId){
         return projectEmployeeRepository.findByProjectIdAndEmployee_Role(projectId, Role.ENGINEER);
     }
+
+    public List<ProjectEmployee> findAllEngineerProjects(Long employeeId) {
+        return projectEmployeeRepository.findAllByEmployeeId(employeeId);
+    }
+
+    public ProjectEmployee updateJobDescription(User user, Long projectId, String description){
+        ProjectEmployee projectEmployee = projectEmployeeRepository.findByProjectIdAndEmployeeId(projectId, user.getId());
+        projectEmployee.setJobDescription(description);
+        return projectEmployeeRepository.save(projectEmployee);
+    }
 }
