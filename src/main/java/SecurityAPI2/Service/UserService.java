@@ -3,6 +3,8 @@ package SecurityAPI2.Service;
 import SecurityAPI2.Dto.PasswordChangeDto;
 import SecurityAPI2.Dto.SkillDto;
 import SecurityAPI2.Exceptions.IncorrectPassword;
+import SecurityAPI2.Exceptions.TokenExceptions.HmacTokenExpiredException;
+import SecurityAPI2.Exceptions.TokenExceptions.HmacTokenInvalidException;
 import SecurityAPI2.Exceptions.UserDoesntExistException;
 import SecurityAPI2.Exceptions.*;
 import SecurityAPI2.Model.*;
@@ -24,7 +26,6 @@ import SecurityAPI2.Model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.util.ThrowableCauseExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 

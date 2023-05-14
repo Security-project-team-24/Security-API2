@@ -29,6 +29,17 @@ public class EmailSender {
     }
 
     @Async
+    public void sendLoginEmail(String token,String email)
+    {
+        EmailDetails details = new EmailDetails();
+        details.setRecipient(email);
+        details.setMsgBody("This is your email login!<br/>" +
+                "You can login <a href=\"http://localhost:3000/user/activation/"+token+"\">here!<a/></h2> <br/>");
+        details.setSubject("Login via email from company 24");
+        sendEmail(details);
+    }
+
+    @Async
     public void sendDisapprovedMail(String reason, String email)
     {
         EmailDetails details = new EmailDetails();
