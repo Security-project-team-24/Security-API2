@@ -9,19 +9,26 @@ import SecurityAPI2.Model.*;
 import SecurityAPI2.Repository.IEngineerRepository;
 import SecurityAPI2.Repository.ISkillRepository;
 import SecurityAPI2.Repository.IUserRepository;
+
+import SecurityAPI2.Service.Interfaces.IStorageService;
+
 import SecurityAPI2.utils.Email.EmailSender;
 import SecurityAPI2.utils.hmac.HmacGenerator;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import SecurityAPI2.Dto.RegisterDto;
 import SecurityAPI2.Model.Enum.Role;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.util.ThrowableCauseExtractor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,12 +45,15 @@ public class UserService {
     @Autowired
     private BCryptPasswordEncoder encoder;
     @Autowired
+    private IStorageService storageService;
+    @Autowired
     private EmailSender emailSender;
     @Autowired
     private RegistrationDisapprovalService registrationDisapprovalService;
     @Autowired
     private RegistrationApprovalService registrationApprovalService;
     
+
     public User findByEmail(final String email) {
         return userRepository.findByEmail(email);
     }
@@ -148,5 +158,12 @@ public class UserService {
         }
         engineer.setSkills(skills);
         userRepository.save(user);
+    }
+
+    public void uploadCv(MultipartFile file, User user) throws IOException {
+        String url = storageService.uploadFile(file);
+        Engineer engineer = engineerRepository.findByUser(user);
+        engineer.setCvUrl(url);
+        engineerRepository.save(engineer);
     }
 }

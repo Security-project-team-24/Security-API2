@@ -17,9 +17,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.web.multipart.MultipartFile;
+
 import org.springframework.data.domain.Page;
 
+
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -31,6 +36,7 @@ public class UserController {
     private UserMapper userMapper;
     @Autowired
     JwtUtils jwtUtils;
+
     @GetMapping("/employees/{pageSize}/{pageNumber}")
     @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<PageDto<UserDto>> findAll(@Valid @PathVariable int pageSize, @Valid @PathVariable int pageNumber) {
@@ -85,12 +91,18 @@ public class UserController {
     @PostMapping("/skill")
     @PreAuthorize("isAuthenticated() and hasAuthority('ENGINEER')")
     public ResponseEntity addSkill(@Valid @RequestBody SkillDto skillDto, Errors errors, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
-        System.out.println(errors);
         if(errors.hasErrors()){
             throw new SkillValueInvalid();
         }
         final User user = jwtUtils.getUserFromToken(authHeader);
         userService.addSkill(skillDto, user);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/cv/upload")
+    public ResponseEntity uploadCv(@RequestParam("file") MultipartFile file,  @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
+        final User user = jwtUtils.getUserFromToken(authHeader);
+        userService.uploadCv(file, user);
         return ResponseEntity.ok().build();
     }
 

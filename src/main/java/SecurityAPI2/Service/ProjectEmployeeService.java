@@ -36,6 +36,16 @@ public class ProjectEmployeeService {
         return projectEmployeeRepository.findByProjectIdAndEmployee_Role(projectId, Role.ENGINEER);
     }
 
+    public List<ProjectEmployee> findAllEngineerProjects(Long employeeId) {
+        return projectEmployeeRepository.findAllByEmployeeId(employeeId);
+    }
+
+    public ProjectEmployee updateJobDescription(User user, Long projectId, String description) {
+        ProjectEmployee projectEmployee = projectEmployeeRepository.findByProjectIdAndEmployeeId(projectId, user.getId());
+        projectEmployee.setJobDescription(description);
+        return projectEmployeeRepository.save(projectEmployee);
+
+    }
     public List<User> findAllEmployeesNotWorkingOnProject(Long projectId){
         List<Role> roles = Arrays.asList(Role.ENGINEER, Role.PROJECTMANAGER);
         List<User> allEmployees = userRepository.findByRoleIn(roles);
