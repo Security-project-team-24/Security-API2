@@ -22,13 +22,13 @@ public class ProjectController {
     @Autowired
     private ProjectMapper projectMapper;
     @PostMapping("")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<ProjectDto> create(@Valid @RequestBody ProjectDto dto) {
         Project project = projectService.Create(projectMapper.projectDtoToProject(dto));
         return ResponseEntity.ok(projectMapper.projectToProjectDto(project));
     }
     @GetMapping("/{pageSize}/{pageNumber}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<PageDto<ProjectDto>> findAll(@Valid @PathVariable int pageSize, @Valid @PathVariable int pageNumber) {
         Page<Project> projectsPage = projectService.FindAll(pageSize, pageNumber);
         PageDto<ProjectDto> dto = new PageDto<>();

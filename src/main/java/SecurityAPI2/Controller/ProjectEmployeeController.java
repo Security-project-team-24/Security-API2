@@ -27,20 +27,20 @@ public class ProjectEmployeeController {
     @Autowired
     private UserMapper userMapper;
     @PostMapping("")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<Long> addProjectEmployee(@Valid @RequestBody ProjectEmployeeRequest req) {
         ProjectEmployee projectEmployee = projectEmployeeService.addProjectEmployee(req);
         return ResponseEntity.ok(projectEmployee.getId());
     }
     @GetMapping("/{projectId}/engineers")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<List<ProjectEmployeeDto>> findAllEngineersOnProject(@Valid @PathVariable Long projectId) {
         List<ProjectEmployee> engineers = projectEmployeeService.findAllEngineersOnProject(projectId);
         return ResponseEntity.ok(projectEmployeeMapper.projectEmployeesToProjectEmployeeDtos(engineers));
     }
 
     @GetMapping("/available/{projectId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<List<UserDto>> findAllEmployeesNotWorkingOnProject(@Valid @PathVariable Long projectId) {
         List<User> employees = projectEmployeeService.findAllEmployeesNotWorkingOnProject(projectId);
         return ResponseEntity.ok(userMapper.usersToUserDtos(employees));

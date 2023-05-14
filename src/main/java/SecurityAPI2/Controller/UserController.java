@@ -32,7 +32,7 @@ public class UserController {
     @Autowired
     JwtUtils jwtUtils;
     @GetMapping("/employees/{pageSize}/{pageNumber}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<PageDto<UserDto>> findAll(@Valid @PathVariable int pageSize, @Valid @PathVariable int pageNumber) {
        Page<User> userPage = userService.findAll(pageSize, pageNumber);
        PageDto<UserDto> dto = new PageDto<>();
@@ -41,22 +41,25 @@ public class UserController {
        return ResponseEntity.ok(dto);
     }
     @GetMapping("/pending")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<List<UserDto>> findPendingUsers() {
         return ResponseEntity.ok(userMapper.usersToUserDtos(userService.findPendingUsers()));
     }
     @PatchMapping("/update")
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('ENGINEER') or hasAuthority('PROJECTMANAGER') or hasAuthority('HRMANAGER')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN') or hasAuthority('ENGINEER') or hasAuthority('PROJECTMANAGER') or hasAuthority('HRMANAGER')")
     public ResponseEntity<UserDto> update(@RequestBody final UserDto userDto) {
         return ResponseEntity.ok(userMapper.userToUserDto(userService.update(userMapper.userDtoToUser(userDto))));
     }
 
     @PatchMapping("/approve/{id}")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<Void> approve(@PathVariable Long id) {
         userService.approve(id);
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/disapprove/{id}/{reason}")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<Void> disapprove(@PathVariable Long id, @PathVariable final String reason) {
         userService.disapprove(id,reason);
         return ResponseEntity.ok().build();
@@ -69,7 +72,7 @@ public class UserController {
     }
 
     @PutMapping("/change-password")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity changePassword(@Valid @RequestBody final PasswordChangeDto passwordChangeDto, Errors errors, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         if(errors.hasErrors()){
             throw new InvalidPasswordFormatException();
@@ -80,7 +83,7 @@ public class UserController {
     }
 
     @PostMapping("/skill")
-    @PreAuthorize("hasAuthority('ENGINEER')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ENGINEER')")
     public ResponseEntity addSkill(@Valid @RequestBody SkillDto skillDto, Errors errors, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
         System.out.println(errors);
         if(errors.hasErrors()){
