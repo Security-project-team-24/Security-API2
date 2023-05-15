@@ -52,6 +52,7 @@ public class ProjectEmployeeController {
     }
 
     @GetMapping("/projects")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ENGINEER')")
     public ResponseEntity<List<ProjectEmployeeDto>> findAllEngineerProjects(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
         final User user = jwtUtils.getUserFromToken(authHeader);
         List<ProjectEmployee> projects = projectEmployeeService.findAllEngineerProjects(user.getId());
@@ -59,6 +60,7 @@ public class ProjectEmployeeController {
     }
 
     @PatchMapping("/description/update")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ENGINEER')")
     public ResponseEntity<ProjectEmployeeDto> updateJobDescription(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader, @Valid @RequestBody UpdateEngineerProjectDto updateEngineerProjectDto) {
         final User user = jwtUtils.getUserFromToken(authHeader);
         ProjectEmployee updatedProjectEmployee = projectEmployeeService.updateJobDescription(user, updateEngineerProjectDto.getProjectId(), updateEngineerProjectDto.getDescription());

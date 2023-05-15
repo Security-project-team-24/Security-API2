@@ -100,6 +100,7 @@ public class UserController {
     }
 
     @PostMapping("/cv/upload")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ENGINEER')")
     public ResponseEntity uploadCv(@RequestParam("file") MultipartFile file,  @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
         final User user = jwtUtils.getUserFromToken(authHeader);
         userService.uploadCv(file, user);
