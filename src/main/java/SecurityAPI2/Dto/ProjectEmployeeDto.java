@@ -5,6 +5,7 @@ import SecurityAPI2.Model.User;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,4 +17,6 @@ public class ProjectEmployeeDto {
     UserDto employee;
     String jobDescription;
     Project project;
+    Date startDate;
+    Date endDate;
 }

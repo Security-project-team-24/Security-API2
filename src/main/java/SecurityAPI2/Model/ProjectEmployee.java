@@ -4,6 +4,7 @@ import SecurityAPI2.Model.Enum.Role;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -23,9 +24,15 @@ public class ProjectEmployee {
     @ManyToOne
     @JoinColumn(name = "project_id")
     private Project project;
-    public ProjectEmployee(User employee, Project project, String jobDescription){
+    @Column(name = "startDate")
+    private Date startDate;
+    @Column(name = "endDate")
+    private Date endDate;
+    public ProjectEmployee(User employee, Project project, String jobDescription, Date startDate, Date endDate){
         this.employee = employee;
         this.project = project;
         this.jobDescription = jobDescription;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 }

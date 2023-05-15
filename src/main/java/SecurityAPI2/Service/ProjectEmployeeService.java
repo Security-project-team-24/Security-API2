@@ -27,7 +27,7 @@ public class ProjectEmployeeService {
     public ProjectEmployee addProjectEmployee(ProjectEmployeeRequest request) {
         Project project = projectRepository.getById(request.getProjectId());
         User employee = userRepository.getById(request.getEmployeeId());
-        ProjectEmployee projectEmployee = new ProjectEmployee(employee, project, request.getJobDescription());
+        ProjectEmployee projectEmployee = new ProjectEmployee(employee, project, request.getJobDescription(), request.getStartDate(), request.getEndDate());
         projectEmployeeRepository.save(projectEmployee);
         return projectEmployee;
     }
