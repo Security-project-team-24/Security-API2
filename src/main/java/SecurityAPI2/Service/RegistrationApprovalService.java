@@ -13,9 +13,9 @@ public class RegistrationApprovalService {
     @Autowired
     private IRegistrationApprovalRepository registrationApprovalRepository;
     
-    public RegistrationApproval findById(Long id){
-        Optional<RegistrationApproval> registrationApproval = registrationApprovalRepository.findById(id);
-        if(registrationApproval.isPresent()) return registrationApproval.get();
+    public RegistrationApproval findById(String id){
+        RegistrationApproval registrationApproval = registrationApprovalRepository.findByHMACHash(id);
+        if(registrationApproval != null) return registrationApproval;
         throw new RegistrationApprovalNonExistingException();
     }
     public RegistrationApproval save(RegistrationApproval registrationApproval){

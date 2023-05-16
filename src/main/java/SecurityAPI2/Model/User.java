@@ -40,8 +40,6 @@ public class User {
     private Status status;
     @Column(name = "firstLogged")
     boolean firstLogged;
-    @Column(name = "activated")
-    boolean activated;
 
 
     public User(String email, String password, String name, String surname, String phoneNumber, Role role, Address address){
