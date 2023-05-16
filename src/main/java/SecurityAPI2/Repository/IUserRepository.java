@@ -19,5 +19,5 @@ public interface IUserRepository extends JpaRepository<User, Long> {
     List<User> findAllByStatus(Status status);
     User save(User user);
     Page<User> findAll(Pageable pageable);
-    List<User> findByRoleIn(List<Role> roles);
+    List<User> findByRoleInAndActivated(List<Role> roles, boolean activated);
 }
