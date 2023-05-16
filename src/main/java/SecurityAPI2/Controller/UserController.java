@@ -9,6 +9,7 @@ import SecurityAPI2.Exceptions.SkillValueInvalid;
 import SecurityAPI2.Mapper.UserMapper;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Security.JwtUtils;
+import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -35,7 +36,7 @@ public class UserController {
     @Autowired
     private UserMapper userMapper;
     @Autowired
-    JwtUtils jwtUtils;
+    AuthService authService;
 
     @GetMapping("/employees/{pageSize}/{pageNumber}")
     @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
@@ -83,7 +84,7 @@ public class UserController {
         if(errors.hasErrors()){
             throw new InvalidPasswordFormatException();
         }
-        final User user = jwtUtils.getUserFromToken(authHeader);
+        final User user = authService.getUserFromToken(authHeader);
         userService.changePassword(user, passwordChangeDto);
         return ResponseEntity.ok().build();
     }
@@ -94,7 +95,7 @@ public class UserController {
         if(errors.hasErrors()){
             throw new SkillValueInvalid();
         }
-        final User user = jwtUtils.getUserFromToken(authHeader);
+        final User user = authService.getUserFromToken(authHeader);
         userService.addSkill(skillDto, user);
         return ResponseEntity.ok().build();
     }
@@ -102,7 +103,7 @@ public class UserController {
     @PostMapping("/cv/upload")
     @PreAuthorize("isAuthenticated() and hasAuthority('ENGINEER')")
     public ResponseEntity uploadCv(@RequestParam("file") MultipartFile file,  @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
-        final User user = jwtUtils.getUserFromToken(authHeader);
+        final User user = authService.getUserFromToken(authHeader);
         userService.uploadCv(file, user);
         return ResponseEntity.ok().build();
     }

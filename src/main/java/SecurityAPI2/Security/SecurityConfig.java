@@ -61,7 +61,8 @@ public class SecurityConfig {
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 			.authorizeRequests().antMatchers("/**").permitAll().and()
 			.authorizeRequests().antMatchers("/auth/login").permitAll().and()
-			.authorizeRequests().antMatchers("/auth/register").permitAll()
+			.authorizeRequests().antMatchers("/auth/register").permitAll().and()
+				.authorizeRequests().antMatchers("/auth/refresh").permitAll()
 			.anyRequest().authenticated();
 
 		http.authenticationProvider(authenticationProvider());
