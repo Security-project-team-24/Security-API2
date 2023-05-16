@@ -3,6 +3,7 @@ package SecurityAPI2.Controller;
 import SecurityAPI2.Dto.TokenDto;
 import SecurityAPI2.Dto.UserDto;
 import SecurityAPI2.Exceptions.TokenExceptions.LoginTokenExpiredException;
+import SecurityAPI2.Exceptions.UserDoesntExistException;
 import SecurityAPI2.Mapper.UserMapper;
 import SecurityAPI2.Model.LoginToken;
 import SecurityAPI2.Model.User;
@@ -61,6 +62,7 @@ public class AuthController {
     @PostMapping("/send/login/{email}")
     public ResponseEntity<Void> sendLoginEmail(@Email @PathVariable String email) {
         User user = userService.findByEmail(email);
+        if(user == null) throw new UserDoesntExistException();
         UUID loginTokenUUID = UUID.randomUUID();
         String loginToken = jwtUtils.generateLoginToken(loginTokenUUID,email);
         loginTokenService.create(new LoginToken(loginTokenUUID));
