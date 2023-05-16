@@ -4,17 +4,16 @@ import SecurityAPI2.Model.User;
 import SecurityAPI2.Service.UserService;
 import SecurityAPI2.Security.UserDetails.UserDetailsImpl;
 
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.UnsupportedJwtException;
 
 @Component
 public class JwtUtils {
@@ -23,13 +22,44 @@ public class JwtUtils {
 	private final String jwtSecret = "SecuritySecret";
 	private final int accessTokenExpirationMs = 1000 * 60 * 15; //15 min
 	private final int refreshTokenExpirationMs = 1000 * 60 * 60 * 2; //2 sata
+	private final int loginTokenExpirationMs = 1000 * 60 * 10; //10 min
 
 	public String generateAccessToken(final Authentication authentication) {
 		return generateToken(authentication, accessTokenExpirationMs);
 	}
-
 	public String generateRefreshToken(final Authentication authentication) {
 		return generateToken(authentication, refreshTokenExpirationMs);
+	}
+	public String generateLoginToken(UUID uuid, String email) {
+		return Jwts.builder()
+				.setSubject(email)
+				.claim("uuid", uuid)
+				.setIssuedAt(new Date())
+				.setExpiration(new Date((new Date()).getTime() + loginTokenExpirationMs))
+				.signWith(SignatureAlgorithm.HS512, jwtSecret)
+				.compact();
+	}
+	public String generateAccessToken(String email) {
+		return Jwts.builder()
+				.setSubject(email)
+				.setIssuedAt(new Date())
+				.setExpiration(new Date((new Date()).getTime() + accessTokenExpirationMs))
+				.signWith(SignatureAlgorithm.HS512, jwtSecret)
+				.compact();
+	}
+	public Claims verifyToken(String token) throws Exception{
+		return Jwts.parser()
+				.setSigningKey(jwtSecret)
+				.parseClaimsJws(token)
+				.getBody();
+	}
+	public String generateRefreshToken(String email) {
+		return Jwts.builder()
+				.setSubject(email)
+				.setIssuedAt(new Date())
+				.setExpiration(new Date((new Date()).getTime() + refreshTokenExpirationMs))
+				.signWith(SignatureAlgorithm.HS512, jwtSecret)
+				.compact();
 	}
 	public String generateToken(final Authentication authentication, int expirationMs) {
 		final UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();

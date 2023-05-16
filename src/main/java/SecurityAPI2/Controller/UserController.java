@@ -71,9 +71,9 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/activate/{hmacToken}/{approvalId}")
-    public ResponseEntity<Void> activateAccount(@PathVariable Long approvalId, @PathVariable final String hmacToken) {
-        userService.activateAccount(hmacToken,approvalId);
+    @PatchMapping("/activate/{hmacToken}")
+    public ResponseEntity<Void> activateAccount(@PathVariable final String hmacToken) {
+        userService.activateAccount(hmacToken);
         return ResponseEntity.ok().build();
     }
 
