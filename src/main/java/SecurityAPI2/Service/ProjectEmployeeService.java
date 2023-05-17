@@ -10,6 +10,7 @@ import SecurityAPI2.Repository.IProjectRepository;
 import SecurityAPI2.Repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,5 +60,14 @@ public class ProjectEmployeeService {
                 .filter(user -> !projectEmployees.contains(user))
                 .collect(Collectors.toList());
         return usersNotWorkingOnProject;
+    }
+
+    public List<ProjectEmployee> findManagerProjects(User user){
+        return projectEmployeeRepository.findAllByEmployeeId(user.getId());
+    }
+
+    @Transactional
+    public void removeEmployeeFromProject(Long projectId, Long employeeId){
+        projectEmployeeRepository.removeProjectEmployeeByProjectIdAndEmployeeId(projectId, employeeId);
     }
 }
