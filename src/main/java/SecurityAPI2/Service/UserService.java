@@ -46,7 +46,7 @@ public class UserService {
     private final IRegistrationApprovalRepository registrationApprovalRepository;
     private final IRegistrationDisapprovalRepository registrationDisapprovalRepository;
 
-    private RegistrationDisapproval Create(RegistrationDisapproval registrationDisapproval) {
+    private RegistrationDisapproval save(RegistrationDisapproval registrationDisapproval) {
         return registrationDisapprovalRepository.save(registrationDisapproval);
     }
     public boolean isRegistrationDisapprovedInNearPast(String email){
@@ -129,7 +129,7 @@ public class UserService {
         final User user = userRepository.findById(id).get();
         user.setStatus(Status.DISAPPROVED);
         userRepository.save(user);
-        Create(new RegistrationDisapproval(0L,user.getEmail(),LocalDateTime.now()));
+        save(new RegistrationDisapproval(0L,user.getEmail(),LocalDateTime.now()));
         emailService.sendDisapprovedMail(reason,user.getEmail());
     }
 
