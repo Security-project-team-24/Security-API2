@@ -20,5 +20,4 @@ public class UserDto {
     Address address;
     Status status;
     boolean firstLogged;
-    boolean activated;
 }

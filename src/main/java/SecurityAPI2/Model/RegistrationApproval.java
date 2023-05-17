@@ -20,21 +20,9 @@ public class RegistrationApproval {
     private String email;
     @Column(name = "date")
     private LocalDateTime date;
-    @Column(name = "name")
-    private String name;
-    @Column(name = "surname")
-    private String surname;
-    @Column(name = "phoneNumber")
-    private String phoneNumber;
-    @Column(name = "role")
-    private Role role;
     
     public RegistrationApproval(User user){
         email = user.getEmail();
         date = LocalDateTime.now();
-        name = user.getName();
-        surname = user.getSurname();
-        role = user.getRole();
-        phoneNumber = user.getPhoneNumber();
     }
 }
