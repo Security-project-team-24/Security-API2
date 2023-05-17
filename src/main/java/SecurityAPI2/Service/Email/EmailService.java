@@ -1,6 +1,6 @@
-package SecurityAPI2.utils.Email;
+package SecurityAPI2.Service.Email;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -8,12 +8,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.mail.internet.MimeMessage;
-import javax.validation.constraints.Email;
 
 @Service
-public class EmailSender {
-    @Autowired
-    private JavaMailSender javaMailSender;
+@RequiredArgsConstructor
+public class EmailService implements IEmailService{
+    private final JavaMailSender javaMailSender;
     @Value
     ("${spring.mail.username}") private String sender;
 

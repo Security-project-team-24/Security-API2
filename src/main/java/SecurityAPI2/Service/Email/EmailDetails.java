@@ -1,4 +1,4 @@
-package SecurityAPI2.utils.Email;
+package SecurityAPI2.Service.Email;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

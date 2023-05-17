@@ -3,15 +3,16 @@ package SecurityAPI2.Service;
 import SecurityAPI2.Exceptions.RegistrationApprovalNonExistingException;
 import SecurityAPI2.Model.RegistrationApproval;
 import SecurityAPI2.Repository.IRegistrationApprovalRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class RegistrationApprovalService {
-    @Autowired
-    private IRegistrationApprovalRepository registrationApprovalRepository;
+    private final IRegistrationApprovalRepository registrationApprovalRepository;
     
     public RegistrationApproval findById(String id){
         RegistrationApproval registrationApproval = registrationApprovalRepository.findByHMACHash(id);

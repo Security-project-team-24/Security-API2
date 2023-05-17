@@ -1,35 +1,25 @@
 package SecurityAPI2.Security;
 
-import SecurityAPI2.Model.User;
-import SecurityAPI2.Service.UserService;
-import SecurityAPI2.Security.UserDetails.UserDetailsImpl;
-
-import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import io.jsonwebtoken.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtils {
-	@Autowired
-	private UserService userService;
 	private final String jwtSecret = "SecuritySecret";
-	private final int accessTokenExpirationMs = 1000 * 60 * 15; //15 min
-	private final int refreshTokenExpirationMs = 1000 * 60 * 60 * 2; //2 sata
+	private final int accessTokenExpirationMs = 1000 * 60 * 1; //15 min
+	private final int refreshTokenExpirationMs = 1000 * 60 * 3; //2 sata
 	private final int loginTokenExpirationMs = 1000 * 60 * 10; //10 min
 
-	public String generateAccessToken(final Authentication authentication) {
-		return generateToken(authentication, accessTokenExpirationMs);
+	public String generateAccessToken(String subject) {
+		return generateToken(subject, accessTokenExpirationMs);
 	}
-	public String generateRefreshToken(final Authentication authentication) {
-		return generateToken(authentication, refreshTokenExpirationMs);
+	public String generateRefreshToken(String subject) {
+		return generateToken(subject, refreshTokenExpirationMs);
 	}
+
 	public String generateLoginToken(UUID uuid, String email) {
 		return Jwts.builder()
 				.setSubject(email)
@@ -39,47 +29,21 @@ public class JwtUtils {
 				.signWith(SignatureAlgorithm.HS512, jwtSecret)
 				.compact();
 	}
-	public String generateAccessToken(String email) {
+
+	public String generateToken(String email, int expirationMs) {
 		return Jwts.builder()
-				.setSubject(email)
-				.setIssuedAt(new Date())
-				.setExpiration(new Date((new Date()).getTime() + accessTokenExpirationMs))
-				.signWith(SignatureAlgorithm.HS512, jwtSecret)
-				.compact();
-	}
-	public Claims verifyToken(String token) throws Exception{
-		return Jwts.parser()
-				.setSigningKey(jwtSecret)
-				.parseClaimsJws(token)
-				.getBody();
-	}
-	public String generateRefreshToken(String email) {
-		return Jwts.builder()
-				.setSubject(email)
-				.setIssuedAt(new Date())
-				.setExpiration(new Date((new Date()).getTime() + refreshTokenExpirationMs))
-				.signWith(SignatureAlgorithm.HS512, jwtSecret)
-				.compact();
-	}
-	public String generateToken(final Authentication authentication, int expirationMs) {
-		final UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-		return Jwts.builder()
-			.setSubject(userPrincipal.getEmail())
+			.setSubject(email)
 			.setIssuedAt(new Date())
 			.setExpiration(new Date((new Date()).getTime() + expirationMs))
 			.signWith(SignatureAlgorithm.HS512, jwtSecret)
 			.compact();
 	}
 
-	public User getUserFromToken(String token) {
-		return userService.findByEmail(parseAndGetEmailFromToken(token));
-	}
-	public String getEmailFromJwtToken(final String token) {
+	public String getEmailFromJwtToken(String token) {
 		return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
 	}
-
-	private String parseAndGetEmailFromToken(final String authHeader) {
-		return getEmailFromJwtToken(authHeader.substring(7));
+	public String getUuidFromJwtToken(String token) {
+		return (String)Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().get("uuid");
 	}
 
 	public boolean validateJwtToken(final String authToken) {
