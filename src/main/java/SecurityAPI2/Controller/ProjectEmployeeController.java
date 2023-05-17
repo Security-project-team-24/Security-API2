@@ -72,4 +72,19 @@ public class ProjectEmployeeController {
         List<User> employees = projectEmployeeService.findAllEmployeesNotWorkingOnProject(projectId);
         return ResponseEntity.ok(userMapper.usersToUserDtos(employees));
     }
+
+    @GetMapping("/projects/manager")
+    @PreAuthorize("isAuthenticated() and hasAuthority('PROJECTMANAGER')")
+    public ResponseEntity<List<ProjectEmployeeDto>> findManagerProjects(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
+        final User user = jwtUtils.getUserFromToken(authHeader);
+        List<ProjectEmployee> projects = projectEmployeeService.findManagerProjects(user);
+        return ResponseEntity.ok(projectEmployeeMapper.projectEmployeesToProjectEmployeeDtos(projects));
+    }
+
+    @DeleteMapping("")
+    @PreAuthorize("isAuthenticated() and hasAuthority('PROJECTMANAGER')")
+    public ResponseEntity removeEmployeeFromProject(@Valid @RequestBody ProjectEmployeeRequest projectEmployeeRequest){
+        projectEmployeeService.removeEmployeeFromProject(projectEmployeeRequest.getProjectId(), projectEmployeeRequest.getEmployeeId());
+        return ResponseEntity.ok().build();
+    }
 }

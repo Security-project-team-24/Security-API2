@@ -13,4 +13,6 @@ public interface IProjectEmployeeRepository extends JpaRepository<ProjectEmploye
     List<ProjectEmployee> findAllByEmployeeId(Long employeeId);
 
     ProjectEmployee findByProjectIdAndEmployeeId(Long projectId, Long employeeId);
+
+    void removeProjectEmployeeByProjectIdAndEmployeeId(Long projectId, Long employeeId);
 }
