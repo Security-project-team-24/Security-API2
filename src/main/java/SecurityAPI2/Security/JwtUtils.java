@@ -1,28 +1,16 @@
 package SecurityAPI2.Security;
 
-import SecurityAPI2.Exceptions.TokenExceptions.RefreshTokenExpiredException;
-import SecurityAPI2.Model.User;
-import SecurityAPI2.Service.UserService;
-import SecurityAPI2.Security.UserDetails.UserDetailsImpl;
-
-import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import io.jsonwebtoken.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtils {
-	@Autowired
-	private UserService userService;
 	private final String jwtSecret = "SecuritySecret";
 	private final int accessTokenExpirationMs = 1000 * 60 * 1; //15 min
-	private final int refreshTokenExpirationMs = 1000 * 60 * 60 * 2; //2 sata
+	private final int refreshTokenExpirationMs = 1000 * 60 * 3; //2 sata
 	private final int loginTokenExpirationMs = 1000 * 60 * 10; //10 min
 
 	public String generateAccessToken(String subject) {

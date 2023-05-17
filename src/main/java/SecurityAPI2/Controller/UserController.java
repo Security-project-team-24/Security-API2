@@ -8,12 +8,10 @@ import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Exceptions.SkillValueInvalid;
 import SecurityAPI2.Mapper.UserMapper;
 import SecurityAPI2.Model.User;
-import SecurityAPI2.Security.JwtUtils;
 import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
@@ -30,13 +28,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/user")
+@RequiredArgsConstructor
 public class UserController {
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private UserMapper userMapper;
-    @Autowired
-    AuthService authService;
+    private final UserService userService;
+    private final UserMapper userMapper;
+    private final AuthService authService;
 
     @GetMapping("/employees/{pageSize}/{pageNumber}")
     @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")

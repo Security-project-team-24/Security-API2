@@ -1,4 +1,4 @@
-package SecurityAPI2.Service.Interfaces;
+package SecurityAPI2.Service.Storage;
 
 import org.springframework.web.multipart.MultipartFile;
 

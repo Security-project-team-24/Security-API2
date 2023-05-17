@@ -2,7 +2,9 @@ package SecurityAPI2.Security;
 
 import SecurityAPI2.Security.UserDetails.UserDetailsServiceImpl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -19,7 +21,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-	private final UserDetailsServiceImpl userDetailService;
+	@Autowired
+	private  UserDetailsServiceImpl userDetailService;
 	@Autowired
 	private AuthEntryPointJwt unauthorizedHandler;
 
