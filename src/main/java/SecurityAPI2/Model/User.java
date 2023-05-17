@@ -40,7 +40,7 @@ public class User {
     private Status status;
     @Column(name = "firstLogged")
     boolean firstLogged;
-    @Column(name = "activated")
+    @Column(name="activated")
     boolean activated;
 
 

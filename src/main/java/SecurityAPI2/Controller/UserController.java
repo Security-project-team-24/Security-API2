@@ -8,11 +8,10 @@ import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Exceptions.SkillValueInvalid;
 import SecurityAPI2.Mapper.UserMapper;
 import SecurityAPI2.Model.User;
-import SecurityAPI2.Security.JwtUtils;
+import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
@@ -29,13 +28,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/user")
+@RequiredArgsConstructor
 public class UserController {
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private UserMapper userMapper;
-    @Autowired
-    JwtUtils jwtUtils;
+    private final UserService userService;
+    private final UserMapper userMapper;
+    private final AuthService authService;
 
     @GetMapping("/employees/{pageSize}/{pageNumber}")
     @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
@@ -71,9 +68,9 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/activate/{hmacToken}/{approvalId}")
-    public ResponseEntity<Void> activateAccount(@PathVariable Long approvalId, @PathVariable final String hmacToken) {
-        userService.activateAccount(hmacToken,approvalId);
+    @PatchMapping("/activate/{hmacToken}")
+    public ResponseEntity<Void> activateAccount(@PathVariable final String hmacToken) {
+        userService.activateAccount(hmacToken);
         return ResponseEntity.ok().build();
     }
 
@@ -83,7 +80,7 @@ public class UserController {
         if(errors.hasErrors()){
             throw new InvalidPasswordFormatException();
         }
-        final User user = jwtUtils.getUserFromToken(authHeader);
+        final User user = authService.getUserFromToken(authHeader);
         userService.changePassword(user, passwordChangeDto);
         return ResponseEntity.ok().build();
     }
@@ -94,7 +91,7 @@ public class UserController {
         if(errors.hasErrors()){
             throw new SkillValueInvalid();
         }
-        final User user = jwtUtils.getUserFromToken(authHeader);
+        final User user = authService.getUserFromToken(authHeader);
         userService.addSkill(skillDto, user);
         return ResponseEntity.ok().build();
     }
@@ -102,7 +99,7 @@ public class UserController {
     @PostMapping("/cv/upload")
     @PreAuthorize("isAuthenticated() and hasAuthority('ENGINEER')")
     public ResponseEntity uploadCv(@RequestParam("file") MultipartFile file,  @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
-        final User user = jwtUtils.getUserFromToken(authHeader);
+        final User user = authService.getUserFromToken(authHeader);
         userService.uploadCv(file, user);
         return ResponseEntity.ok().build();
     }

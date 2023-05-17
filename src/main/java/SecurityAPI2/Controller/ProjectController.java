@@ -5,6 +5,7 @@ import SecurityAPI2.Dto.ProjectDto;
 import SecurityAPI2.Mapper.ProjectMapper;
 import SecurityAPI2.Model.Project;
 import SecurityAPI2.Service.ProjectService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +17,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/project")
+@RequiredArgsConstructor
 public class ProjectController {
-    @Autowired
-    private ProjectService projectService;
-    @Autowired
-    private ProjectMapper projectMapper;
+    private final ProjectService projectService;
+    private final ProjectMapper projectMapper;
     @PostMapping("")
     @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<ProjectDto> create(@Valid @RequestBody ProjectDto dto) {

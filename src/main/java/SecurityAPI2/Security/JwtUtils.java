@@ -1,55 +1,49 @@
 package SecurityAPI2.Security;
 
-import SecurityAPI2.Model.User;
-import SecurityAPI2.Service.UserService;
-import SecurityAPI2.Security.UserDetails.UserDetailsImpl;
-
 import java.util.Date;
+import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
+import io.jsonwebtoken.*;
 import org.springframework.stereotype.Component;
-
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.UnsupportedJwtException;
 
 @Component
 public class JwtUtils {
-	@Autowired
-	private UserService userService;
 	private final String jwtSecret = "SecuritySecret";
-	private final int accessTokenExpirationMs = 1000 * 60 * 15; //15 min
-	private final int refreshTokenExpirationMs = 1000 * 60 * 60 * 2; //2 sata
+	private final int accessTokenExpirationMs = 1000 * 60 * 1; //15 min
+	private final int refreshTokenExpirationMs = 1000 * 60 * 3; //2 sata
+	private final int loginTokenExpirationMs = 1000 * 60 * 10; //10 min
 
-	public String generateAccessToken(final Authentication authentication) {
-		return generateToken(authentication, accessTokenExpirationMs);
+	public String generateAccessToken(String subject) {
+		return generateToken(subject, accessTokenExpirationMs);
+	}
+	public String generateRefreshToken(String subject) {
+		return generateToken(subject, refreshTokenExpirationMs);
 	}
 
-	public String generateRefreshToken(final Authentication authentication) {
-		return generateToken(authentication, refreshTokenExpirationMs);
-	}
-	public String generateToken(final Authentication authentication, int expirationMs) {
-		final UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+	public String generateLoginToken(UUID uuid, String email) {
 		return Jwts.builder()
-			.setSubject(userPrincipal.getEmail())
+				.setSubject(email)
+				.claim("uuid", uuid)
+				.setIssuedAt(new Date())
+				.setExpiration(new Date((new Date()).getTime() + loginTokenExpirationMs))
+				.signWith(SignatureAlgorithm.HS512, jwtSecret)
+				.compact();
+	}
+
+	public String generateToken(String email, int expirationMs) {
+		return Jwts.builder()
+			.setSubject(email)
 			.setIssuedAt(new Date())
 			.setExpiration(new Date((new Date()).getTime() + expirationMs))
 			.signWith(SignatureAlgorithm.HS512, jwtSecret)
 			.compact();
 	}
 
-	public User getUserFromToken(String token) {
-		return userService.findByEmail(parseAndGetEmailFromToken(token));
-	}
-	public String getEmailFromJwtToken(final String token) {
+	public String getEmailFromJwtToken(String token) {
 		return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
 	}
-
-	private String parseAndGetEmailFromToken(final String authHeader) {
-		return getEmailFromJwtToken(authHeader.substring(7));
+	public String getUuidFromJwtToken(String token) {
+		return (String)Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().get("uuid");
 	}
 
 	public boolean validateJwtToken(final String authToken) {

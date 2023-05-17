@@ -1,6 +1,5 @@
-package SecurityAPI2.Service;
+package SecurityAPI2.Service.Storage;
 
-import SecurityAPI2.Service.Interfaces.IStorageService;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;

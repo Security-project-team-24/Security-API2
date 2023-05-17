@@ -16,7 +16,9 @@ import SecurityAPI2.Mapper.UserMapper;
 import SecurityAPI2.Model.ProjectEmployee;
 import SecurityAPI2.Model.User;
 
+import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.ProjectEmployeeService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -29,15 +31,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/project-employee")
+@RequiredArgsConstructor
 public class ProjectEmployeeController {
-    @Autowired
-    private ProjectEmployeeService projectEmployeeService;
-    @Autowired
-    private ProjectEmployeeMapper projectEmployeeMapper;
-    @Autowired
-    JwtUtils jwtUtils;
-    @Autowired
-    private UserMapper userMapper;
+    private final ProjectEmployeeService projectEmployeeService;
+    private final ProjectEmployeeMapper projectEmployeeMapper;
+    private final UserMapper userMapper;
+    private final AuthService authService;
     @PostMapping("")
     @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
     public ResponseEntity<Long> addProjectEmployee(@Valid @RequestBody ProjectEmployeeRequest req) {
@@ -54,7 +53,7 @@ public class ProjectEmployeeController {
     @GetMapping("/projects")
     @PreAuthorize("isAuthenticated() and hasAuthority('ENGINEER')")
     public ResponseEntity<List<ProjectEmployeeDto>> findAllEngineerProjects(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
-        final User user = jwtUtils.getUserFromToken(authHeader);
+        final User user = authService.getUserFromToken(authHeader);
         List<ProjectEmployee> projects = projectEmployeeService.findAllEngineerProjects(user.getId());
         return ResponseEntity.ok(projectEmployeeMapper.projectEmployeesToProjectEmployeeDtos(projects));
     }
@@ -62,7 +61,7 @@ public class ProjectEmployeeController {
     @PatchMapping("/description/update")
     @PreAuthorize("isAuthenticated() and hasAuthority('ENGINEER')")
     public ResponseEntity<ProjectEmployeeDto> updateJobDescription(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader, @Valid @RequestBody UpdateEngineerProjectDto updateEngineerProjectDto) {
-        final User user = jwtUtils.getUserFromToken(authHeader);
+        final User user = authService.getUserFromToken(authHeader);
         ProjectEmployee updatedProjectEmployee = projectEmployeeService.updateJobDescription(user, updateEngineerProjectDto.getProjectId(), updateEngineerProjectDto.getDescription());
         return ResponseEntity.ok(projectEmployeeMapper.projectEmployeeToProjectEmployeeDto(updatedProjectEmployee));
     }

@@ -1,6 +1,6 @@
-package SecurityAPI2.utils.Email;
+package SecurityAPI2.Service.Email;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -8,23 +8,33 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.mail.internet.MimeMessage;
-import javax.validation.constraints.Email;
 
 @Service
-public class EmailSender {
-    @Autowired
-    private JavaMailSender javaMailSender;
+@RequiredArgsConstructor
+public class EmailService implements IEmailService{
+    private final JavaMailSender javaMailSender;
     @Value
     ("${spring.mail.username}") private String sender;
 
     @Async
-    public void sendApprovedMail(String email,String hmacToken,Long approvalid)
+    public void sendApprovedMail(String email,String hmacToken)
     {
         EmailDetails details = new EmailDetails();
         details.setRecipient(email);
         details.setMsgBody("Welcome to our company!<br/>" +
-                "You can <a href=\"http://localhost:3000/user/activation/"+hmacToken+"/"+approvalid+"\">Activate your account here!<a/></h2> <br/>");
+                "You can <a href=\"http://localhost:3000/user/activation/"+hmacToken+"\">Activate your account here!<a/></h2> <br/>");
         details.setSubject("Welcome email from company 24");
+        sendEmail(details);
+    }
+
+    @Async
+    public void sendLoginEmail(String token,String email)
+    {
+        EmailDetails details = new EmailDetails();
+        details.setRecipient(email);
+        details.setMsgBody("This is your email login!<br/>" +
+                "You can login <a href=\"http://localhost:3000/user/activation/"+token+"\">here!<a/></h2> <br/>");
+        details.setSubject("Login via email from company 24");
         sendEmail(details);
     }
 

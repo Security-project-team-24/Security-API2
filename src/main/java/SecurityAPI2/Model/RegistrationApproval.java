@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 @Entity(name = "registration_approvals")
 public class RegistrationApproval {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "hmac_hash")
+    private String HMACHash;
     @Column(name = "email")
     private String email;
     @Column(name = "date")

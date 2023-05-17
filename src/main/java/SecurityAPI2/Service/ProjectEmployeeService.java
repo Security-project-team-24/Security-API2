@@ -8,6 +8,7 @@ import SecurityAPI2.Model.User;
 import SecurityAPI2.Repository.IProjectEmployeeRepository;
 import SecurityAPI2.Repository.IProjectRepository;
 import SecurityAPI2.Repository.IUserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +19,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ProjectEmployeeService {
-    @Autowired
-    private IProjectEmployeeRepository projectEmployeeRepository;
-    @Autowired
-    private IProjectRepository projectRepository;
-    @Autowired
-    private IUserRepository userRepository;
+    private final IProjectEmployeeRepository projectEmployeeRepository;
+    private final IProjectRepository projectRepository;
+    private final IUserRepository userRepository;
     public ProjectEmployee addProjectEmployee(ProjectEmployeeRequest request) {
         Project project = projectRepository.getById(request.getProjectId());
         User employee = userRepository.getById(request.getEmployeeId());
@@ -49,7 +48,7 @@ public class ProjectEmployeeService {
     }
     public List<User> findAllEmployeesNotWorkingOnProject(Long projectId){
         List<Role> roles = Arrays.asList(Role.ENGINEER, Role.PROJECTMANAGER);
-        List<User> allEmployees = userRepository.findByRoleIn(roles);
+        List<User> allEmployees = userRepository.findByRoleInAndActivated(roles, true);
 
         Project project = projectRepository.findById(projectId).get();
         List<User> projectEmployees = new ArrayList<>();
