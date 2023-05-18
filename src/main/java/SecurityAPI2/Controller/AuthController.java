@@ -60,8 +60,10 @@ public class AuthController {
     }
 
     @PostMapping("/passwordless/login/{token}")
-    public ResponseEntity<TokenDto> passwordlessLogin(@PathVariable String token) {
+    public ResponseEntity<TokenDto> passwordlessLogin(@PathVariable String token, HttpServletResponse response) {
         TokenDto data = authService.authenticateWithOneTimeToken(token);
+        Cookie cookie = createRefreshTokenCookie(data.getRefreshToken());
+        response.addCookie(cookie);
         return ResponseEntity.ok(data);
     }
 

@@ -73,7 +73,8 @@ public class UserController {
     }
 
     @PatchMapping("/activate/{hmacToken}")
-    public ResponseEntity<Void> activateAccount(@PathVariable final String hmacToken) {
+    public ResponseEntity<Void> activateAccount(@PathVariable String hmacToken) {
+        hmacToken = hmacToken + " ";
         userService.activateAccount(hmacToken);
         return ResponseEntity.ok().build();
     }
