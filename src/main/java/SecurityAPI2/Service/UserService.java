@@ -133,8 +133,8 @@ public class UserService {
         emailService.sendDisapprovedMail(reason,user.getEmail());
     }
 
-    public List<User> findPendingUsers() {
-        return userRepository.findAllByStatus(Status.PENDING);
+    public Page<User> findPendingUsers(int pageNumber, int pageSize) {
+        return userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber),Status.PENDING);
     }
     public User update(final User newUser) {
         final User user = userRepository.findById(newUser.getId()).get();

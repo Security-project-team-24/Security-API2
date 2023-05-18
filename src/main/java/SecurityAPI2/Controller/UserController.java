@@ -43,10 +43,14 @@ public class UserController {
        dto.setTotalPages(userPage.getTotalPages());
        return ResponseEntity.ok(dto);
     }
-    @GetMapping("/pending")
+    @GetMapping("/pending/{pageSize}/{pageNumber}")
     @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
-    public ResponseEntity<List<UserDto>> findPendingUsers() {
-        return ResponseEntity.ok(userMapper.usersToUserDtos(userService.findPendingUsers()));
+    public ResponseEntity<PageDto<UserDto>> findPendingUsers(@Valid @PathVariable int pageSize, @Valid @PathVariable int pageNumber) {
+        Page<User> userPage = userService.findPendingUsers(pageSize, pageNumber);
+        PageDto<UserDto> dto = new PageDto<>();
+        dto.setContent(userMapper.usersToUserDtos(userPage.getContent()));
+        dto.setTotalPages(userPage.getTotalPages());
+        return ResponseEntity.ok(dto);
     }
     @PatchMapping("/update")
     @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN') or hasAuthority('ENGINEER') or hasAuthority('PROJECTMANAGER') or hasAuthority('HRMANAGER')")
