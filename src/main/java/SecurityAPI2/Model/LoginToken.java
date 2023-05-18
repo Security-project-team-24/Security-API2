@@ -16,4 +16,8 @@ public class LoginToken {
     @Id
     @Column(name = "uuid")
     private UUID uuid;
+    @Column(name = "email")
+    private String email;
+    @Column(name = "expiration_date_time")
+    private LocalDateTime expirationDateTime;
 }

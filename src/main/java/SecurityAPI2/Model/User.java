@@ -21,7 +21,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "email")
+    @Column(name = "email",unique = true)
     private String email;
     @Column(name = "password")
     private String password;
@@ -40,8 +40,6 @@ public class User {
     private Status status;
     @Column(name = "firstLogged")
     boolean firstLogged;
-    @Column(name="activated")
-    boolean activated;
 
 
     public User(String email, String password, String name, String surname, String phoneNumber, Role role, Address address){

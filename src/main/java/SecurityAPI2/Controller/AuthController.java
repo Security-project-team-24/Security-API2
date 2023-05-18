@@ -2,7 +2,9 @@ package SecurityAPI2.Controller;
 
 import SecurityAPI2.Dto.TokenDto;
 import SecurityAPI2.Dto.UserDto;
+import SecurityAPI2.Exceptions.UserNotActivatedException;
 import SecurityAPI2.Mapper.UserMapper;
+import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Dto.LoginDto;
 import SecurityAPI2.Dto.RegisterDto;
@@ -40,6 +42,7 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody final LoginDto loginRequest, HttpServletResponse response) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
+        if(userService.findByEmail(email).getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
         Authentication authStrategy = new UsernamePasswordAuthenticationToken(email, password);
         Authentication authentication = authenticationManager.authenticate(authStrategy);
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -57,8 +60,10 @@ public class AuthController {
     }
 
     @PostMapping("/passwordless/login/{token}")
-    public ResponseEntity<TokenDto> passwordlessLogin(@PathVariable String token) {
+    public ResponseEntity<TokenDto> passwordlessLogin(@PathVariable String token, HttpServletResponse response) {
         TokenDto data = authService.authenticateWithOneTimeToken(token);
+        Cookie cookie = createRefreshTokenCookie(data.getRefreshToken());
+        response.addCookie(cookie);
         return ResponseEntity.ok(data);
     }
 

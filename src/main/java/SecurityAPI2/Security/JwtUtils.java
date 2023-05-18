@@ -13,21 +13,12 @@ public class JwtUtils {
 	private final int refreshTokenExpirationMs = 1000 * 60 * 30; //2 sata
 	private final int loginTokenExpirationMs = 1000 * 60 * 10; //10 min
 
+
 	public String generateAccessToken(String subject) {
 		return generateToken(subject, accessTokenExpirationMs);
 	}
 	public String generateRefreshToken(String subject) {
 		return generateToken(subject, refreshTokenExpirationMs);
-	}
-
-	public String generateLoginToken(UUID uuid, String email) {
-		return Jwts.builder()
-				.setSubject(email)
-				.claim("uuid", uuid)
-				.setIssuedAt(new Date())
-				.setExpiration(new Date((new Date()).getTime() + loginTokenExpirationMs))
-				.signWith(SignatureAlgorithm.HS512, jwtSecret)
-				.compact();
 	}
 
 	public String generateToken(String email, int expirationMs) {
@@ -41,9 +32,6 @@ public class JwtUtils {
 
 	public String getEmailFromJwtToken(String token) {
 		return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
-	}
-	public String getUuidFromJwtToken(String token) {
-		return (String)Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().get("uuid");
 	}
 
 	public boolean validateJwtToken(final String authToken) {
