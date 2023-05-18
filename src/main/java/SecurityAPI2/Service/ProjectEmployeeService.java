@@ -2,6 +2,7 @@ package SecurityAPI2.Service;
 
 import SecurityAPI2.Dto.ProjectEmployeeRequest;
 import SecurityAPI2.Model.Enum.Role;
+import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.Project;
 import SecurityAPI2.Model.ProjectEmployee;
 import SecurityAPI2.Model.User;
@@ -48,7 +49,7 @@ public class ProjectEmployeeService {
     }
     public List<User> findAllEmployeesNotWorkingOnProject(Long projectId){
         List<Role> roles = Arrays.asList(Role.ENGINEER, Role.PROJECTMANAGER);
-        List<User> allEmployees = userRepository.findByRoleInAndActivated(roles, true);
+        List<User> allEmployees = userRepository.findByRoleInAndStatus(roles, Status.ACTIVATED);
 
         Project project = projectRepository.findById(projectId).get();
         List<User> projectEmployees = new ArrayList<>();

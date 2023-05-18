@@ -29,5 +29,6 @@ public class Engineer {
 
     public Engineer(User user){
         this.user = user;
+        this.seniority = LocalDate.now();
     }
 }

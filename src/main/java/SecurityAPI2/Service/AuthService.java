@@ -2,9 +2,12 @@ package SecurityAPI2.Service;
 
 import SecurityAPI2.Dto.TokenDto;
 import SecurityAPI2.Exceptions.TokenExceptions.InvalidTokenClaimsException;
+import SecurityAPI2.Exceptions.TokenExceptions.LoginTokenExpiredException;
 import SecurityAPI2.Exceptions.TokenExceptions.LoginTokenInvalidException;
 import SecurityAPI2.Exceptions.TokenExceptions.RefreshTokenExpiredException;
 import SecurityAPI2.Exceptions.UserDoesntExistException;
+import SecurityAPI2.Exceptions.UserNotActivatedException;
+import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.LoginToken;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Repository.ILoginTokenRepository;
@@ -13,6 +16,7 @@ import SecurityAPI2.Service.Email.IEmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -27,20 +31,22 @@ public class AuthService {
         User user = userService.findByEmail(email);
         if(user == null)
             throw new UserDoesntExistException();
+        if(user.getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
         UUID loginTokenUUID = UUID.randomUUID();
-        String loginToken = jwtUtils.generateLoginToken(loginTokenUUID,email);
-        loginTokenRepository.save(new LoginToken(loginTokenUUID));
-        emailService.sendLoginEmail(loginToken,email);
+        loginTokenRepository.save(new LoginToken(loginTokenUUID,email, LocalDateTime.now().plusMinutes(10)));
+        emailService.sendLoginEmail(loginTokenUUID.toString(),email);
     }
     public TokenDto authenticateWithOneTimeToken(String token) {
-        String uuidStr = jwtUtils.getUuidFromJwtToken(token);
-        String email = jwtUtils.getEmailFromJwtToken(token);
-        UUID uuid = UUID.fromString(uuidStr);
+        UUID uuid = UUID.fromString(token);
         LoginToken loginToken = loginTokenRepository.findByUuid(uuid);
         if (loginToken == null)
             throw new LoginTokenInvalidException();
+        if(loginToken.getExpirationDateTime().isBefore(LocalDateTime.now())) {
+            loginTokenRepository.delete(loginToken);
+            throw new LoginTokenExpiredException();   
+        }
         loginTokenRepository.delete(loginToken);
-        return generateTokens(email);
+        return generateTokens(loginToken.getEmail());
     }
     public TokenDto generateTokens(String email) {
         String refreshToken = jwtUtils.generateRefreshToken(email);

@@ -7,9 +7,7 @@ import SecurityAPI2.Exceptions.TokenExceptions.HmacTokenExpiredException;
 import SecurityAPI2.Exceptions.UserDoesntExistException;
 import SecurityAPI2.Exceptions.*;
 import SecurityAPI2.Model.*;
-import SecurityAPI2.Repository.IEngineerRepository;
-import SecurityAPI2.Repository.ISkillRepository;
-import SecurityAPI2.Repository.IUserRepository;
+import SecurityAPI2.Repository.*;
 
 import SecurityAPI2.Service.Storage.IStorageService;
 
@@ -31,8 +29,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -43,63 +43,84 @@ public class UserService {
     private final BCryptPasswordEncoder encoder;
     private final IStorageService storageService;
     private final EmailService emailService;
-    private final RegistrationDisapprovalService registrationDisapprovalService;
-    private final RegistrationApprovalService registrationApprovalService;
-    
+    private final IRegistrationApprovalRepository registrationApprovalRepository;
+    private final IRegistrationDisapprovalRepository registrationDisapprovalRepository;
 
+    private RegistrationDisapproval save(RegistrationDisapproval registrationDisapproval) {
+        return registrationDisapprovalRepository.save(registrationDisapproval);
+    }
+    public boolean isRegistrationDisapprovedInNearPast(String email){
+        return registrationDisapprovalRepository.FindInLast2Weeks(email,LocalDateTime.now().minus(2, ChronoUnit.WEEKS)).size() != 0;
+    }
+    private RegistrationApproval findRegistrationApprovalById(String id){
+        RegistrationApproval registrationApproval = registrationApprovalRepository.findByHMACHash(id);
+        if(registrationApproval != null) return registrationApproval;
+        throw new RegistrationApprovalNonExistingException();
+    }
+    private RegistrationApproval save(RegistrationApproval registrationApproval){
+        return registrationApprovalRepository.save(registrationApproval);
+    }
+    private void delete(RegistrationApproval registrationApproval){
+        registrationApprovalRepository.delete(registrationApproval);
+    }
+    
     public User findByEmail(final String email) {
         return userRepository.findByEmail(email);
     }
 
     public User register(RegisterDto registerDto) {
-        if(!registerDto.getConfirmPassword().equals(registerDto.getPassword())){
-            throw new InvalidConfirmPassword();
-        }
-        if(registrationDisapprovalService.isRegistrationDisapprovedInNearPast(registerDto.getEmail())){
-            throw new RegistrationDisapprovedInNearPastException();
-        }
-        User user = new User(registerDto.getEmail(), encoder.encode(registerDto.getPassword()), registerDto.getName(),
-                registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getRole(), registerDto.getAddress());
+        if(!registerDto.getConfirmPassword().equals(registerDto.getPassword())) throw new InvalidConfirmPassword();
+        if(isRegistrationDisapprovedInNearPast(registerDto.getEmail())) throw new RegistrationDisapprovedInNearPastException();
         
-        user.setFirstLogged(user.getRole() == Role.ADMIN);
-        user.setStatus(Status.PENDING);
-        if(user.getRole() == Role.ENGINEER){
-            engineerRepository.save(new Engineer(user));
+        User user = findByEmail(registerDto.getEmail());
+        
+        if(user == null){
+            user = new User(registerDto.getEmail(), encoder.encode(registerDto.getPassword()), registerDto.getName(),
+                    registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getRole(), registerDto.getAddress());
+            user.setFirstLogged(user.getRole() == Role.ADMIN);
+            user.setStatus(Status.PENDING);
+            return userRepository.save(user);
+        } else if(user.getStatus() == Status.DISAPPROVED) {
+            User updateUser = new User(registerDto.getEmail(), encoder.encode(registerDto.getPassword()), registerDto.getName(),
+                    registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getRole(), registerDto.getAddress());
+            updateUser.setId(user.getId());
+            updateUser.setFirstLogged(updateUser.getRole() == Role.ADMIN);
+            updateUser.setStatus(Status.PENDING);
+            return userRepository.save(updateUser);
         }
-        return userRepository.save(user);
+        throw new UserAlreadyExistsException();
     }
     
     public Page<User> findAll(int pageNumber, int pageSize) {
         return userRepository.findAll(PageRequest.of(pageSize, pageNumber));
     }
     public void approve(Long id) {
-        boolean doesUserExists = userRepository.findById(id).isPresent();
-        if (!doesUserExists) throw new UserDoesntExistException();
-        final User user = userRepository.findById(id).get();
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) throw new UserDoesntExistException();
+        User user = optionalUser.get();
         user.setStatus(Status.APPROVED);
         userRepository.save(user);
         RegistrationApproval registrationApproval = new RegistrationApproval(user);
-        String hmacToken = HmacGenerator.generate(generateApprovalHMACString(registrationApproval));
+        String hmacToken = HmacGenerator.generate(generateApprovalHMACString(user,registrationApproval.getDate()));
         registrationApproval.setHMACHash(hmacToken);
-        registrationApproval = registrationApprovalService.save(registrationApproval);
+        registrationApproval = save(registrationApproval);
         emailService.sendApprovedMail(user.getEmail(),hmacToken);
     }
     public void activateAccount(String hmacToken){
-        RegistrationApproval registrationApproval = registrationApprovalService.findById(hmacToken);
+        RegistrationApproval registrationApproval = findRegistrationApprovalById(hmacToken);
         if(registrationApproval.getDate().plusDays(1).isBefore(LocalDateTime.now())) throw new HmacTokenExpiredException();
         User user = findByEmail(registrationApproval.getEmail());
         user.setStatus(Status.ACTIVATED);
         if(user.getRole() == Role.ENGINEER){
-            Engineer engineer = engineerRepository.findByUser(user);
-            engineer.setSeniority(LocalDate.now());
+            Engineer engineer = new Engineer(user);
             engineerRepository.save(engineer);
         }
         userRepository.save(user);
-        registrationApprovalService.delete(registrationApproval);
+        delete(registrationApproval);
     }
-    private String generateApprovalHMACString(RegistrationApproval registrationApproval){
-        return  registrationApproval.getEmail() + "|" + registrationApproval.getPhoneNumber()+ "|" + registrationApproval.getName() 
-                + "|" + registrationApproval.getSurname() + "|" + registrationApproval.getRole();
+    private String generateApprovalHMACString(User user,LocalDateTime dateTime){
+        return  user.getEmail() + "|" + user.getPhoneNumber()+ "|" + user.getName() 
+                + "|" + user.getSurname() + "|" + user.getRole() + "|" + dateTime.toString();
     }
 
     public void disapprove(Long id, String reason) {
@@ -108,12 +129,12 @@ public class UserService {
         final User user = userRepository.findById(id).get();
         user.setStatus(Status.DISAPPROVED);
         userRepository.save(user);
-        registrationDisapprovalService.Create(new RegistrationDisapproval(0L,user.getEmail(),LocalDateTime.now()));
+        save(new RegistrationDisapproval(0L,user.getEmail(),LocalDateTime.now()));
         emailService.sendDisapprovedMail(reason,user.getEmail());
     }
 
-    public List<User> findPendingUsers() {
-        return userRepository.findAllByStatus(Status.PENDING);
+    public Page<User> findPendingUsers(int pageNumber, int pageSize) {
+        return userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber),Status.PENDING);
     }
     public User update(final User newUser) {
         final User user = userRepository.findById(newUser.getId()).get();
