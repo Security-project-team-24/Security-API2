@@ -38,13 +38,13 @@ public class ProjectEmployeeController {
     private final UserMapper userMapper;
     private final AuthService authService;
     @PostMapping("")
-    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN') or hasAuthority('PROJECTMANAGER')")
     public ResponseEntity<Long> addProjectEmployee(@Valid @RequestBody ProjectEmployeeRequest req) {
         ProjectEmployee projectEmployee = projectEmployeeService.addProjectEmployee(req);
         return ResponseEntity.ok(projectEmployee.getId());
     }
     @GetMapping("/{projectId}/engineers")
-    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN') or hasAuthority('PROJECTMANAGER')")
     public ResponseEntity<List<ProjectEmployeeDto>> findAllEngineersOnProject(@Valid @PathVariable Long projectId) {
         List<ProjectEmployee> engineers = projectEmployeeService.findAllEngineersOnProject(projectId);
         return ResponseEntity.ok(projectEmployeeMapper.projectEmployeesToProjectEmployeeDtos(engineers));
@@ -67,7 +67,7 @@ public class ProjectEmployeeController {
     }
 
     @GetMapping("/available/{projectId}")
-    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN') or hasAuthority('PROJECTMANAGER')")
     public ResponseEntity<List<UserDto>> findAllEmployeesNotWorkingOnProject(@Valid @PathVariable Long projectId) {
         List<User> employees = projectEmployeeService.findAllEmployeesNotWorkingOnProject(projectId);
         return ResponseEntity.ok(userMapper.usersToUserDtos(employees));
@@ -76,7 +76,7 @@ public class ProjectEmployeeController {
     @GetMapping("/projects/manager")
     @PreAuthorize("isAuthenticated() and hasAuthority('PROJECTMANAGER')")
     public ResponseEntity<List<ProjectEmployeeDto>> findManagerProjects(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
-        final User user = jwtUtils.getUserFromToken(authHeader);
+        final User user = authService.getUserFromToken(authHeader);
         List<ProjectEmployee> projects = projectEmployeeService.findManagerProjects(user);
         return ResponseEntity.ok(projectEmployeeMapper.projectEmployeesToProjectEmployeeDtos(projects));
     }

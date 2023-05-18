@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtUtils {
 	private final String jwtSecret = "SecuritySecret";
-	private final int accessTokenExpirationMs = 1000 * 60 * 1; //15 min
-	private final int refreshTokenExpirationMs = 1000 * 60 * 3; //2 sata
+	private final int accessTokenExpirationMs = 1000 * 60 * 15; //15 min
+	private final int refreshTokenExpirationMs = 1000 * 60 * 30; //2 sata
 	private final int loginTokenExpirationMs = 1000 * 60 * 10; //10 min
 
 	public String generateAccessToken(String subject) {
