@@ -76,7 +76,7 @@ public class ProjectEmployeeController {
     @GetMapping("/projects/manager")
     @PreAuthorize("isAuthenticated() and hasAuthority('PROJECTMANAGER')")
     public ResponseEntity<List<ProjectEmployeeDto>> findManagerProjects(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
-        final User user = jwtUtils.getUserFromToken(authHeader);
+        final User user = authService.getUserFromToken(authHeader);
         List<ProjectEmployee> projects = projectEmployeeService.findManagerProjects(user);
         return ResponseEntity.ok(projectEmployeeMapper.projectEmployeesToProjectEmployeeDtos(projects));
     }
