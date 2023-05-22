@@ -79,9 +79,9 @@ public class JwtUtils {
 		return validateToken(registerToken, registerSecret);
 	}
 
-	private boolean validateToken(String loginToken, String loginSecret) {
+	private boolean validateToken(String token, String secret) {
 		try {
-			Jwts.parser().setSigningKey(loginSecret).parseClaimsJws(loginToken);
+			Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
 			return true;
 		} catch (final MalformedJwtException e) {
 			System.out.println("Invalid JWT token: " + e.getMessage());
