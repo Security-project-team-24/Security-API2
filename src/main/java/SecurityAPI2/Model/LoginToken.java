@@ -3,8 +3,6 @@ package SecurityAPI2.Model;
 import lombok.*;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -14,10 +12,6 @@ import java.util.UUID;
 @Entity(name = "login_tokens")
 public class LoginToken {
     @Id
-    @Column(name = "uuid")
-    private UUID uuid;
-    @Column(name = "email")
-    private String email;
-    @Column(name = "expiration_date_time")
-    private LocalDateTime expirationDateTime;
+    @Column(name = "hashed_uuid")
+    private String hashedUuid;
 }

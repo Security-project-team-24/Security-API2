@@ -3,17 +3,21 @@ package SecurityAPI2.Service;
 import SecurityAPI2.Dto.PasswordChangeDto;
 import SecurityAPI2.Dto.SkillDto;
 import SecurityAPI2.Exceptions.IncorrectPassword;
-import SecurityAPI2.Exceptions.TokenExceptions.HmacTokenExpiredException;
+import SecurityAPI2.Exceptions.TokenExceptions.InvalidTokenClaimsException;
+import SecurityAPI2.Exceptions.TokenExceptions.TokenExpiredException;
+import SecurityAPI2.Exceptions.TokenExceptions.TokenInvalidException;
 import SecurityAPI2.Exceptions.UserDoesntExistException;
 import SecurityAPI2.Exceptions.*;
 import SecurityAPI2.Model.*;
 import SecurityAPI2.Repository.*;
 
+import SecurityAPI2.Security.JwtUtils;
 import SecurityAPI2.Service.Storage.IStorageService;
 
 import SecurityAPI2.Service.Email.EmailService;
-import SecurityAPI2.utils.hmac.HmacGenerator;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import SecurityAPI2.Dto.RegisterDto;
 import SecurityAPI2.Model.Enum.Role;
@@ -27,12 +31,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +46,7 @@ public class UserService {
     private final EmailService emailService;
     private final IRegistrationApprovalRepository registrationApprovalRepository;
     private final IRegistrationDisapprovalRepository registrationDisapprovalRepository;
+    private final JwtUtils jwtUtils;
 
     private RegistrationDisapproval save(RegistrationDisapproval registrationDisapproval) {
         return registrationDisapprovalRepository.save(registrationDisapproval);
@@ -52,8 +54,8 @@ public class UserService {
     public boolean isRegistrationDisapprovedInNearPast(String email){
         return registrationDisapprovalRepository.FindInLast2Weeks(email,LocalDateTime.now().minus(2, ChronoUnit.WEEKS)).size() != 0;
     }
-    private RegistrationApproval findRegistrationApprovalById(String id){
-        RegistrationApproval registrationApproval = registrationApprovalRepository.findByHMACHash(id);
+    private RegistrationApproval findRegistrationApprovalByHashedUuid(String hashedUuid){
+        RegistrationApproval registrationApproval = registrationApprovalRepository.findByHashedUuid(hashedUuid);
         if(registrationApproval != null) return registrationApproval;
         throw new RegistrationApprovalNonExistingException();
     }
@@ -99,17 +101,25 @@ public class UserService {
         if (optionalUser.isEmpty()) throw new UserDoesntExistException();
         User user = optionalUser.get();
         user.setStatus(Status.APPROVED);
-        userRepository.save(user);
-        RegistrationApproval registrationApproval = new RegistrationApproval(user);
-        String hmacToken = HmacGenerator.generate(generateApprovalHMACString(user,registrationApproval.getDate()));
-        registrationApproval.setHMACHash(hmacToken);
+        UUID registerUUID = UUID.randomUUID();
+        String registerToken = jwtUtils.generateRegisterToken(user.getEmail(),registerUUID);
+        RegistrationApproval registrationApproval = new RegistrationApproval(String.valueOf(registerUUID.toString().hashCode()));
         registrationApproval = save(registrationApproval);
-        emailService.sendApprovedMail(user.getEmail(),hmacToken);
+        emailService.sendApprovedMail(user.getEmail(),registerToken);
     }
-    public void activateAccount(String hmacToken){
-        RegistrationApproval registrationApproval = findRegistrationApprovalById(hmacToken);
-        if(registrationApproval.getDate().plusDays(1).isBefore(LocalDateTime.now())) throw new HmacTokenExpiredException();
-        User user = findByEmail(registrationApproval.getEmail());
+    public void activateAccount(String registerToken){
+        try{
+            jwtUtils.validateRegisterToken(registerToken);
+        }catch(final ExpiredJwtException e){
+            throw new TokenExpiredException("Your account link expired.");
+        }catch(final Exception e){
+            throw new TokenInvalidException("Your account link invalid");
+        }
+        Claims registerClaims = jwtUtils.getClaimsFromRegisterToken(registerToken);
+        RegistrationApproval registrationApproval = findRegistrationApprovalByHashedUuid(
+                String.valueOf(registerClaims.get("uuid").toString().hashCode()));
+        User user = findByEmail(registerClaims.getSubject());
+        if(user == null) throw new InvalidTokenClaimsException();
         user.setStatus(Status.ACTIVATED);
         if(user.getRole() == Role.ENGINEER){
             Engineer engineer = new Engineer(user);
@@ -117,10 +127,6 @@ public class UserService {
         }
         userRepository.save(user);
         delete(registrationApproval);
-    }
-    private String generateApprovalHMACString(User user,LocalDateTime dateTime){
-        return  user.getEmail() + "|" + user.getPhoneNumber()+ "|" + user.getName() 
-                + "|" + user.getSurname() + "|" + user.getRole() + "|" + dateTime.toString();
     }
 
     public void disapprove(Long id, String reason) {

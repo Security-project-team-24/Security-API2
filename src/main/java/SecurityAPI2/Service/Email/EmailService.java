@@ -17,12 +17,12 @@ public class EmailService implements IEmailService{
     ("${spring.mail.username}") private String sender;
 
     @Async
-    public void sendApprovedMail(String email,String hmacToken)
+    public void sendApprovedMail(String email,String registerToken)
     {
         EmailDetails details = new EmailDetails();
         details.setRecipient(email);
         details.setMsgBody("Welcome to our company!<br/>" +
-                "You can <a href=\"http://localhost:3000/user/activation/"+hmacToken+"\">Activate your account here!<a/></h2> <br/>");
+                "You can <a href=\"http://localhost:3000/user/activation/"+registerToken+"\">Activate your account here!<a/></h2> <br/>");
         details.setSubject("Welcome email from company 24");
         sendEmail(details);
     }

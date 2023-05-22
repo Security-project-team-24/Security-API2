@@ -2,9 +2,9 @@ package SecurityAPI2.Service;
 
 import SecurityAPI2.Dto.TokenDto;
 import SecurityAPI2.Exceptions.TokenExceptions.InvalidTokenClaimsException;
-import SecurityAPI2.Exceptions.TokenExceptions.LoginTokenExpiredException;
-import SecurityAPI2.Exceptions.TokenExceptions.LoginTokenInvalidException;
 import SecurityAPI2.Exceptions.TokenExceptions.RefreshTokenExpiredException;
+import SecurityAPI2.Exceptions.TokenExceptions.TokenExpiredException;
+import SecurityAPI2.Exceptions.TokenExceptions.TokenInvalidException;
 import SecurityAPI2.Exceptions.UserDoesntExistException;
 import SecurityAPI2.Exceptions.UserNotActivatedException;
 import SecurityAPI2.Model.Enum.Status;
@@ -13,7 +13,10 @@ import SecurityAPI2.Model.User;
 import SecurityAPI2.Repository.ILoginTokenRepository;
 import SecurityAPI2.Security.JwtUtils;
 import SecurityAPI2.Service.Email.IEmailService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,20 +36,28 @@ public class AuthService {
             throw new UserDoesntExistException();
         if(user.getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
         UUID loginTokenUUID = UUID.randomUUID();
-        loginTokenRepository.save(new LoginToken(loginTokenUUID,email, LocalDateTime.now().plusMinutes(10)));
-        emailService.sendLoginEmail(loginTokenUUID.toString(),email);
+        
+        loginTokenRepository.save(new LoginToken(String.valueOf(loginTokenUUID.toString().hashCode())));
+        String loginToken = jwtUtils.generateLoginToken(email,loginTokenUUID);
+        emailService.sendLoginEmail(loginToken,email);
     }
-    public TokenDto authenticateWithOneTimeToken(String token) {
-        UUID uuid = UUID.fromString(token);
-        LoginToken loginToken = loginTokenRepository.findByUuid(uuid);
-        if (loginToken == null)
-            throw new LoginTokenInvalidException();
-        if(loginToken.getExpirationDateTime().isBefore(LocalDateTime.now())) {
-            loginTokenRepository.delete(loginToken);
-            throw new LoginTokenExpiredException();   
+    public TokenDto authenticateWithOneTimeToken(String loginTokenJwt) {
+        try{
+            jwtUtils.validateLoginToken(loginTokenJwt);
+        }catch(final ExpiredJwtException e){
+            throw new TokenExpiredException("Your login link expired.");
+        }catch(final Exception e){
+            throw new TokenInvalidException("Your login link invalid");
         }
+        Claims loginClaims = jwtUtils.getClaimsFromLoginToken(loginTokenJwt);
+        System.out.println(loginClaims.get("uuid").toString().hashCode());
+        LoginToken loginToken = loginTokenRepository.findByHashedUuid(
+                String.valueOf(loginClaims.get("uuid").toString().hashCode())
+        );
+        if (loginToken == null)
+            throw new TokenInvalidException("Your login link invalid");
         loginTokenRepository.delete(loginToken);
-        return generateTokens(loginToken.getEmail());
+        return generateTokens(loginClaims.getSubject());
     }
     public TokenDto generateTokens(String email) {
         String refreshToken = jwtUtils.generateRefreshToken(email);
