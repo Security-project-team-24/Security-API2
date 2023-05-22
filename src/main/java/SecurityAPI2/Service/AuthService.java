@@ -42,14 +42,15 @@ public class AuthService {
         emailService.sendLoginEmail(loginToken,email);
     }
     public TokenDto authenticateWithOneTimeToken(String loginTokenJwt) {
+        Claims loginClaims;
         try{
             jwtUtils.validateLoginToken(loginTokenJwt);
+            loginClaims = jwtUtils.getClaimsFromLoginToken(loginTokenJwt);
         }catch(final ExpiredJwtException e){
             throw new TokenExpiredException("Your login link expired.");
         }catch(final Exception e){
             throw new TokenInvalidException("Your login link invalid");
         }
-        Claims loginClaims = jwtUtils.getClaimsFromLoginToken(loginTokenJwt);
         System.out.println(loginClaims.get("uuid").toString().hashCode());
         LoginToken loginToken = loginTokenRepository.findByHashedUuid(
                 String.valueOf(loginClaims.get("uuid").toString().hashCode())

@@ -108,14 +108,15 @@ public class UserService {
         emailService.sendApprovedMail(user.getEmail(),registerToken);
     }
     public void activateAccount(String registerToken){
+        Claims registerClaims;
         try{
             jwtUtils.validateRegisterToken(registerToken);
+            registerClaims = jwtUtils.getClaimsFromRegisterToken(registerToken);
         }catch(final ExpiredJwtException e){
             throw new TokenExpiredException("Your account link expired.");
         }catch(final Exception e){
             throw new TokenInvalidException("Your account link invalid");
         }
-        Claims registerClaims = jwtUtils.getClaimsFromRegisterToken(registerToken);
         RegistrationApproval registrationApproval = findRegistrationApprovalByHashedUuid(
                 String.valueOf(registerClaims.get("uuid").toString().hashCode()));
         User user = findByEmail(registerClaims.getSubject());
