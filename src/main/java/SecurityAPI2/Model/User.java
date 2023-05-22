@@ -1,14 +1,13 @@
 package SecurityAPI2.Model;
 
 import SecurityAPI2.Model.Enum.Status;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import SecurityAPI2.Model.Enum.UserRole;
 import lombok.*;
-import SecurityAPI2.Model.Enum.Role;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
+import java.util.Set;
 
 
 @Getter
@@ -31,8 +30,13 @@ public class User {
     private String surname;
     @Column(name = "phoneNumber")
     private String phoneNumber;
-    @Column(name = "role")
-    private Role role;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "users_roles",
+            joinColumns = @JoinColumn(name = "users_id"),
+            inverseJoinColumns = @JoinColumn(name = "roles_name"))
+    private Set<Role> roles;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id", referencedColumnName = "id")
     private Address address;
@@ -42,13 +46,22 @@ public class User {
     boolean firstLogged;
 
 
-    public User(String email, String password, String name, String surname, String phoneNumber, Role role, Address address){
+    public User(String email, String password, String name, String surname, String phoneNumber, Address address, List<Role> roles){
         this.email = email;
         this.password = password;
         this.name = name;
         this.surname = surname;
         this.phoneNumber = phoneNumber;
-        this.role = role;
+        this.roles = new HashSet<Role>(roles);
         this.address = address;
+    }
+
+    public boolean isApproved() {
+        return this.status == Status.APPROVED;
+    }
+
+    public boolean hasRole(UserRole match) {
+        return this.roles.stream()
+                .anyMatch(role -> role.getName().equals(match.getValue()));
     }
 }

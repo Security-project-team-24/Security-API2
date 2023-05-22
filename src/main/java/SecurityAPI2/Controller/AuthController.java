@@ -3,7 +3,6 @@ package SecurityAPI2.Controller;
 import SecurityAPI2.Dto.TokenDto;
 import SecurityAPI2.Dto.UserDto;
 import SecurityAPI2.Exceptions.UserNotActivatedException;
-import SecurityAPI2.Mapper.UserMapper;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Dto.LoginDto;
@@ -36,18 +35,19 @@ public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
 
-    private final UserMapper userMapper;
     private final AuthService authService;
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody final LoginDto loginRequest, HttpServletResponse response) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
+        System.out .println(email + " " + password);
         if(userService.findByEmail(email).getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
         Authentication authStrategy = new UsernamePasswordAuthenticationToken(email, password);
         Authentication authentication = authenticationManager.authenticate(authStrategy);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         TokenDto data = authService.generateTokens(email);
+        System.out.println(data);
         Cookie cookie = createRefreshTokenCookie(data.getRefreshToken());
         response.addCookie(cookie);
         return ResponseEntity.ok(data);
@@ -72,14 +72,15 @@ public class AuthController {
         if(errors.hasErrors()){
             throw new InvalidPasswordFormatException();
         }
-        UserDto userDto = userMapper.userToUserDto(userService.register(registerDto));
+        User registered = userService.register(registerDto);
+        UserDto userDto = new UserDto(registered);
         return ResponseEntity.ok(userDto);
     }
     @GetMapping("/current")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and hasAuthority('all')")
     public ResponseEntity<UserDto> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         User user = authService.getUserFromToken(authHeader);
-        return ResponseEntity.ok(userMapper.userToUserDto(user));
+        return ResponseEntity.ok(new UserDto(user));
     }
     @GetMapping("/refresh")
     public ResponseEntity<TokenDto> refreshToken(HttpServletRequest request) {

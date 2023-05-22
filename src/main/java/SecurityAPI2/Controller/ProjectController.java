@@ -2,11 +2,9 @@ package SecurityAPI2.Controller;
 
 import SecurityAPI2.Dto.PageDto;
 import SecurityAPI2.Dto.ProjectDto;
-import SecurityAPI2.Mapper.ProjectMapper;
 import SecurityAPI2.Model.Project;
 import SecurityAPI2.Service.ProjectService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,19 +18,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProjectController {
     private final ProjectService projectService;
-    private final ProjectMapper projectMapper;
     @PostMapping("")
-    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('create_project')")
     public ResponseEntity<ProjectDto> create(@Valid @RequestBody ProjectDto dto) {
-        Project project = projectService.Create(projectMapper.projectDtoToProject(dto));
-        return ResponseEntity.ok(projectMapper.projectToProjectDto(project));
+        Project project = dto.toModel();
+        Project created = projectService.create(project);
+        return ResponseEntity.ok(new ProjectDto(created));
     }
     @GetMapping("/{pageSize}/{pageNumber}")
-    @PreAuthorize("isAuthenticated() and hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('read_all_projects')")
     public ResponseEntity<PageDto<ProjectDto>> findAll(@Valid @PathVariable int pageSize, @Valid @PathVariable int pageNumber) {
-        Page<Project> projectsPage = projectService.FindAll(pageSize, pageNumber);
+        Page<Project> projectsPage = projectService.findAll(pageSize, pageNumber);
         PageDto<ProjectDto> dto = new PageDto<>();
-        dto.setContent(projectMapper.projectsToProjectDtos(projectsPage.getContent()));
+        List<ProjectDto> dtos = ProjectDto.toDtos(projectsPage.getContent());
+        dto.setContent(dtos);
         dto.setTotalPages(projectsPage.getTotalPages());
         return ResponseEntity.ok(dto);
     }

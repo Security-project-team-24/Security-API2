@@ -1,6 +1,5 @@
 package SecurityAPI2.Model;
 
-import SecurityAPI2.Model.Enum.Role;
 import lombok.*;
 
 import javax.persistence.*;

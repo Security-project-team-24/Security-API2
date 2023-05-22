@@ -9,6 +9,7 @@ import SecurityAPI2.Exceptions.TokenExceptions.TokenInvalidException;
 import SecurityAPI2.Exceptions.UserDoesntExistException;
 import SecurityAPI2.Exceptions.*;
 import SecurityAPI2.Model.*;
+import SecurityAPI2.Model.Enum.UserRole;
 import SecurityAPI2.Repository.*;
 
 import SecurityAPI2.Security.JwtUtils;
@@ -20,12 +21,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import SecurityAPI2.Dto.RegisterDto;
-import SecurityAPI2.Model.Enum.Role;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -75,22 +76,37 @@ public class UserService {
         if(isRegistrationDisapprovedInNearPast(registerDto.getEmail())) throw new RegistrationDisapprovedInNearPastException();
         
         User user = findByEmail(registerDto.getEmail());
-        
+
         if(user == null){
-            user = new User(registerDto.getEmail(), encoder.encode(registerDto.getPassword()), registerDto.getName(),
-                    registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getRole(), registerDto.getAddress());
-            user.setFirstLogged(user.getRole() == Role.ADMIN);
-            user.setStatus(Status.PENDING);
+            user = initializeUser(registerDto);
             return userRepository.save(user);
-        } else if(user.getStatus() == Status.DISAPPROVED) {
-            User updateUser = new User(registerDto.getEmail(), encoder.encode(registerDto.getPassword()), registerDto.getName(),
-                    registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getRole(), registerDto.getAddress());
-            updateUser.setId(user.getId());
-            updateUser.setFirstLogged(updateUser.getRole() == Role.ADMIN);
-            updateUser.setStatus(Status.PENDING);
-            return userRepository.save(updateUser);
         }
-        throw new UserAlreadyExistsException();
+
+        if(user.isApproved()) {
+            throw new UserAlreadyExistsException();
+        }
+
+        User updateUser = initializeUser(registerDto);
+        updateUser.setId(user.getId());
+        return userRepository.save(updateUser);
+    }
+
+    private User initializeUser(RegisterDto registerDto) {
+        List<Role> roles = new ArrayList<Role>();
+        List<String> dtoRoles = registerDto.getRoles();
+        if(dtoRoles.isEmpty()) {
+            throw new RolesEmptyException();
+        }
+        roles.add(new Role(dtoRoles.get(0)));
+
+        User user = new User(
+                registerDto.getEmail(), encoder.encode(registerDto.getPassword()),
+                registerDto.getName(),
+                registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getAddress(), roles
+        );
+        user.setFirstLogged(user.hasRole(UserRole.ADMIN));
+        user.setStatus(Status.PENDING);
+        return user;
     }
     
     public Page<User> findAll(int pageNumber, int pageSize) {
@@ -122,7 +138,7 @@ public class UserService {
         User user = findByEmail(registerClaims.getSubject());
         if(user == null) throw new InvalidTokenClaimsException();
         user.setStatus(Status.ACTIVATED);
-        if(user.getRole() == Role.ENGINEER){
+        if(user.hasRole(UserRole.ENGINEER)){
             Engineer engineer = new Engineer(user);
             engineerRepository.save(engineer);
         }
