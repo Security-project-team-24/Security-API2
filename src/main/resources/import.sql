@@ -14,19 +14,21 @@ INSERT INTO permissions (name) values ('update_users_approval');
 INSERT INTO permissions (name) values ('update_password');
 INSERT INTO permissions (name) values ('create_skill');
 INSERT INTO permissions (name) values ('create_cv');
+INSERT INTO permissions (name) values ('administration');
 
 INSERT INTO roles (name) values ('ADMIN');
 INSERT INTO roles (name) values ('PROJECT_MANAGER');
 INSERT INTO roles (name) values ('HR_MANAGER');
 INSERT INTO roles (name) values ('ENGINEER');
 
--- INSERT INTO addresses (city, country, street, street_number, zip_code) values ('Admin','Admin','Admin','Admin','Admin');
--- INSERT INTO users (email, first_logged, name, password, phone_number, status, surname, address_id) values ('admin@gmail.com', false, 'Admin', '$2a$10$mnN40QSm0Tna6ldGdpv6uu8RoyXk0EEo29.qipXeixxKlnSdI700i', 'Admin', 3, 'Admin', 1);
+INSERT INTO addresses (city, country, street, street_number, zip_code) values ('Admin','Admin','Admin','Admin','Admin');
+INSERT INTO users (email, first_logged, name, password, phone_number, status, surname, address_id) values ('admin@gmail.com', false, 'Admin', '$2a$10$EOXN5s2w0JZ50tids9rNxONLNxF9WEuj0bld/qHcYlxu3XeoWeo8u', 'Admin', 3, 'Admin', 1);
 --
--- INSERT INTO users_roles (users_id, roles_name) values (1, 'ADMIN');
+INSERT INTO users_roles (users_id, roles_name) values (1, 'ADMIN');
 
 -- Permission all for all roles
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('ADMIN', 1);
+INSERT INTO permissions_roles (roles_name, permissions_id) values ('ADMIN', 17);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('PROJECT_MANAGER', 1);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('HR_MANAGER', 1);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('ENGINEER', 1);

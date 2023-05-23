@@ -37,6 +37,7 @@ public class UserDetailsImpl implements UserDetails {
 
 		user.getRoles().stream().forEach((role -> {
 			role.getPermissions().stream().forEach(permission -> {
+				System.out.println(permission.getName());
 				authorities.add(new SimpleGrantedAuthority(permission.getName()));
 			});
 		}));

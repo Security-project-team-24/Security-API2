@@ -79,6 +79,7 @@ public class UserService {
 
         if(user == null){
             user = initializeUser(registerDto);
+            System.out.println(user.getPassword());
             return userRepository.save(user);
         }
 

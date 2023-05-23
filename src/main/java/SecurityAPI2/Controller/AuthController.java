@@ -1,12 +1,11 @@
 package SecurityAPI2.Controller;
 
-import SecurityAPI2.Dto.TokenDto;
-import SecurityAPI2.Dto.UserDto;
+import SecurityAPI2.Dto.*;
 import SecurityAPI2.Exceptions.UserNotActivatedException;
 import SecurityAPI2.Model.Enum.Status;
+import SecurityAPI2.Model.Permission;
+import SecurityAPI2.Model.Role;
 import SecurityAPI2.Model.User;
-import SecurityAPI2.Dto.LoginDto;
-import SecurityAPI2.Dto.RegisterDto;
 import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.UserService;
@@ -27,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
@@ -36,6 +36,42 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
 
     private final AuthService authService;
+
+
+
+    @PreAuthorize("isAuthenticated() and hasAuthority('administration')")
+    @GetMapping("/roles")
+    public ResponseEntity<List<String>> getRoles() {
+        List<Role> roles = authService.getRoles();
+        List<String> rolesMapped = roles.stream()
+                .map(role -> role.getName())
+                .toList();
+        return ResponseEntity.ok(rolesMapped);
+
+    }
+    @PreAuthorize("isAuthenticated() and hasAuthority('administration')")
+    @GetMapping("/permissions/{role}")
+    public ResponseEntity<RolePermissionsDto> getRolePermissions(@PathVariable String role) {
+        RolePermissionsDto dto = authService.getRolePermissions(role);
+        System.out.println(dto);
+        return ResponseEntity.ok(dto);
+    }
+
+    @PreAuthorize("isAuthenticated() and hasAuthority('administration')")
+    @PostMapping("/permissions/{role}/commit")
+    public ResponseEntity<?> commitPermissions(
+            @PathVariable String role,
+            @RequestBody List<Permission> permissionsGranted
+    ) {
+        boolean containsAdministration = permissionsGranted.stream().anyMatch(p -> p.getName().equals("administration"));
+        if(!containsAdministration) {
+            Permission administration = Permission.builder().name("administration").build();
+            permissionsGranted.add(administration);
+        }
+        authService.commitPermissions(role, permissionsGranted);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody final LoginDto loginRequest, HttpServletResponse response) {
         String email = loginRequest.getEmail();
@@ -72,6 +108,7 @@ public class AuthController {
         if(errors.hasErrors()){
             throw new InvalidPasswordFormatException();
         }
+        System.out.println(registerDto.getPassword());
         User registered = userService.register(registerDto);
         UserDto userDto = new UserDto(registered);
         return ResponseEntity.ok(userDto);
