@@ -71,6 +71,7 @@ public class UserDto {
                 .stream()
                 .map(role -> role.getName())
                 .collect(Collectors.toList());
+        this.firstLogged = user.isFirstLogged();
 
     }
 

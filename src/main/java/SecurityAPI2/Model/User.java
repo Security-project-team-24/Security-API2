@@ -64,4 +64,6 @@ public class User {
         return this.roles.stream()
                 .anyMatch(role -> role.getName().equals(match.getValue()));
     }
+
+    public boolean isActivated() { return this.status == Status.ACTIVATED;}
 }

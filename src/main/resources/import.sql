@@ -22,7 +22,7 @@ INSERT INTO roles (name) values ('HR_MANAGER');
 INSERT INTO roles (name) values ('ENGINEER');
 
 INSERT INTO addresses (city, country, street, street_number, zip_code) values ('Admin','Admin','Admin','Admin','Admin');
-INSERT INTO users (email, first_logged, name, password, phone_number, status, surname, address_id) values ('admin@gmail.com', false, 'Admin', '$2a$10$EOXN5s2w0JZ50tids9rNxONLNxF9WEuj0bld/qHcYlxu3XeoWeo8u', 'Admin', 3, 'Admin', 1);
+INSERT INTO users (email, first_logged, name, password, phone_number, status, surname, address_id) values ('admin@gmail.com', true, 'Admin', '$2a$10$EOXN5s2w0JZ50tids9rNxONLNxF9WEuj0bld/qHcYlxu3XeoWeo8u', 'Admin', 3, 'Admin', 1);
 --
 INSERT INTO users_roles (users_id, roles_name) values (1, 'ADMIN');
 

@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -63,11 +64,13 @@ public class AuthController {
             @PathVariable String role,
             @RequestBody List<Permission> permissionsGranted
     ) {
+
         boolean containsAdministration = permissionsGranted.stream().anyMatch(p -> p.getName().equals("administration"));
-        if(!containsAdministration) {
+        if(!containsAdministration && role.equals("ADMIN")) {
             Permission administration = Permission.builder().name("administration").build();
             permissionsGranted.add(administration);
         }
+        permissionsGranted.forEach(permission -> System.out.println(permission.getName()));
         authService.commitPermissions(role, permissionsGranted);
         return ResponseEntity.ok().build();
     }
@@ -76,8 +79,9 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody final LoginDto loginRequest, HttpServletResponse response) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
-        System.out .println(email + " " + password);
-        if(userService.findByEmail(email).getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
+        User user = userService.findByEmail(email);
+        if(user == null) throw new BadCredentialsException("Bad credentials!");
+        if(user.getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
         Authentication authStrategy = new UsernamePasswordAuthenticationToken(email, password);
         Authentication authentication = authenticationManager.authenticate(authStrategy);
         SecurityContextHolder.getContext().setAuthentication(authentication);

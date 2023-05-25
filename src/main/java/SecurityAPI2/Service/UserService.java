@@ -79,11 +79,10 @@ public class UserService {
 
         if(user == null){
             user = initializeUser(registerDto);
-            System.out.println(user.getPassword());
             return userRepository.save(user);
         }
 
-        if(user.isApproved()) {
+        if(user.isActivated() || user.isApproved()) {
             throw new UserAlreadyExistsException();
         }
 
@@ -106,7 +105,7 @@ public class UserService {
                 registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getAddress(), roles
         );
         user.setFirstLogged(user.hasRole(UserRole.ADMIN));
-        user.setStatus(Status.PENDING);
+        user.setStatus(user.hasRole(UserRole.ADMIN) ? Status.ACTIVATED : Status.PENDING);
         return user;
     }
     

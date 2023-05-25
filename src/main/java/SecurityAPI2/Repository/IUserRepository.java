@@ -23,14 +23,14 @@ public interface IUserRepository extends JpaRepository<User, Long> {
 
 
     @Query(nativeQuery = true, value = """
-      SELECT DISTINCT u 
+      SELECT DISTINCT u.* 
       FROM 
         users u, users_roles ur, roles r 
       WHERE 
-        u.id=users u.status = :status and 
         u.id = ur.users_id and
-        ur.roles_id = r.id and
-        r.name in :roles           
+        ur.roles_name = r.name and
+        u.status = ?2 and 
+        r.name in ?1           
     """)
-    List<User> findByRoleAndStatus(@Param("roles") List<UserRole> userRoles, @Param("status") Status status);
+    List<User> findByRoleAndStatus(List<String> userRoles, int status);
 }

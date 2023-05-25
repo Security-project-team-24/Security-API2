@@ -48,7 +48,10 @@ public class ProjectEmployeeService {
     }
     public List<User> findAllEmployeesNotWorkingOnProject(Long projectId){
         List<UserRole> userRoles = Arrays.asList(UserRole.ENGINEER, UserRole.PROJECT_MANAGER);
-        List<User> allEmployees = userRepository.findByRoleAndStatus(userRoles, Status.ACTIVATED);
+        System.out.println(userRoles);
+        System.out.println(Status.ACTIVATED.getValue());
+        List<String> roles = userRoles.stream().map(UserRole::getValue).toList();
+        List<User> allEmployees = userRepository.findByRoleAndStatus(roles, Status.ACTIVATED.getValue());
 
         Project project = projectRepository.findById(projectId).get();
         List<User> projectEmployees = new ArrayList<>();

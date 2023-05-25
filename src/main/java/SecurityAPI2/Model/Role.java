@@ -2,6 +2,7 @@ package SecurityAPI2.Model;
 
 import com.google.cloud.Identity;
 import lombok.*;
+import org.hibernate.annotations.Cascade;
 
 import javax.annotation.processing.Generated;
 import javax.persistence.*;
@@ -19,7 +20,7 @@ public class Role {
     @Column(name = "name", unique = true)
     private String name;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
     @JoinTable(
             name = "permissions_roles",
             joinColumns = @JoinColumn(name = "roles_name"),

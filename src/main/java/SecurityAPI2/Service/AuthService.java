@@ -21,10 +21,8 @@ import SecurityAPI2.Service.Email.IEmailService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
@@ -105,9 +103,11 @@ public class AuthService {
     }
 
     public void commitPermissions(String name, List<Permission> permissions) {
-        Role role = Role.builder()
-                .name(name)
-                .permissions(new HashSet<Permission>(permissions)).build();
+        permissionRepository.removeAllPermissionsByRole(name);
+        Role role = roleRepository.findById(name)
+                .orElseThrow(() -> new RuntimeException("No roles found with given name!"));
+        role.setPermissions(new HashSet<>(permissions));
+        System.out.println(role.getPermissions().size());
         roleRepository.save(role);
     }
 
