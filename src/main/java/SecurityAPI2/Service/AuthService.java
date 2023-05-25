@@ -1,5 +1,6 @@
 package SecurityAPI2.Service;
 
+import SecurityAPI2.Dto.RolePermissionsDto;
 import SecurityAPI2.Dto.TokenDto;
 import SecurityAPI2.Exceptions.TokenExceptions.InvalidTokenClaimsException;
 import SecurityAPI2.Exceptions.TokenExceptions.RefreshTokenExpiredException;
@@ -9,17 +10,21 @@ import SecurityAPI2.Exceptions.UserDoesntExistException;
 import SecurityAPI2.Exceptions.UserNotActivatedException;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.LoginToken;
+import SecurityAPI2.Model.Permission;
+import SecurityAPI2.Model.Role;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Repository.ILoginTokenRepository;
+import SecurityAPI2.Repository.IPermissionRepository;
+import SecurityAPI2.Repository.IRoleRepository;
 import SecurityAPI2.Security.JwtUtils;
 import SecurityAPI2.Service.Email.IEmailService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,6 +34,8 @@ public class AuthService {
     private final UserService userService;
     private final ILoginTokenRepository loginTokenRepository;
     private final IEmailService emailService;
+    private final IRoleRepository roleRepository;
+    private final IPermissionRepository permissionRepository;
 
     public void createOneTimeToken(String email) {
         User user = userService.findByEmail(email);
@@ -84,10 +91,32 @@ public class AuthService {
         return user;
     }
 
+    public List<Role> getRoles() {
+        return roleRepository.findAll();
+    }
+
+    public RolePermissionsDto getRolePermissions(String role) {
+        List<Permission> granted = permissionRepository.findPermissionsByRolesName(role);
+        List<Permission> notGranted = permissionRepository.findPermissionsNotGranted(role);
+        System.out.println(granted.size() + " " + notGranted.size());
+        return new RolePermissionsDto(notGranted, granted);
+    }
+
+    public void commitPermissions(String name, List<Permission> permissions) {
+        permissionRepository.removeAllPermissionsByRole(name);
+        Role role = roleRepository.findById(name)
+                .orElseThrow(() -> new RuntimeException("No roles found with given name!"));
+        role.setPermissions(new HashSet<>(permissions));
+        System.out.println(role.getPermissions().size());
+        roleRepository.save(role);
+    }
+
     private String getTokenFromAuthHeader(String header) {
         if(header == null) return null;
         String[] chunks = header.split(" ");
         if(chunks.length < 2) return null;
         return chunks[1];
     }
+
+
 }

@@ -1,7 +1,7 @@
 package SecurityAPI2.Service;
 
 import SecurityAPI2.Dto.ProjectEmployeeRequest;
-import SecurityAPI2.Model.Enum.Role;
+import SecurityAPI2.Model.Enum.UserRole;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.Project;
 import SecurityAPI2.Model.ProjectEmployee;
@@ -10,7 +10,6 @@ import SecurityAPI2.Repository.IProjectEmployeeRepository;
 import SecurityAPI2.Repository.IProjectRepository;
 import SecurityAPI2.Repository.IUserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +33,7 @@ public class ProjectEmployeeService {
     }
 
     public List<ProjectEmployee> findAllEngineersOnProject(Long projectId){
-        return projectEmployeeRepository.findByProjectIdAndEmployee_Role(projectId, Role.ENGINEER);
+        return projectEmployeeRepository.findByProjectIdAndEmployee_Role(projectId, UserRole.ENGINEER.getValue());
     }
 
     public List<ProjectEmployee> findAllEngineerProjects(Long employeeId) {
@@ -48,8 +47,11 @@ public class ProjectEmployeeService {
 
     }
     public List<User> findAllEmployeesNotWorkingOnProject(Long projectId){
-        List<Role> roles = Arrays.asList(Role.ENGINEER, Role.PROJECTMANAGER);
-        List<User> allEmployees = userRepository.findByRoleInAndStatus(roles, Status.ACTIVATED);
+        List<UserRole> userRoles = Arrays.asList(UserRole.ENGINEER, UserRole.PROJECT_MANAGER);
+        System.out.println(userRoles);
+        System.out.println(Status.ACTIVATED.getValue());
+        List<String> roles = userRoles.stream().map(UserRole::getValue).toList();
+        List<User> allEmployees = userRepository.findByRoleAndStatus(roles, Status.ACTIVATED.getValue());
 
         Project project = projectRepository.findById(projectId).get();
         List<User> projectEmployees = new ArrayList<>();

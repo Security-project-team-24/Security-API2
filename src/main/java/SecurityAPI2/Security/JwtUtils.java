@@ -14,7 +14,7 @@ public class JwtUtils {
 	private final String loginSecret = Dotenv.load().get("LOGIN_SECRET");
 	private final String registerSecret = Dotenv.load().get("REGISTER_SECRET");
 	private final int accessTokenExpirationMs = 1000 * 60 * 15; //15 min
-	private final int refreshTokenExpirationMs = 1000 * 60 * 30; //2 sata
+	private final int refreshTokenExpirationMs = 1000 * 60 * 120; //2 sata
 	private final int loginTokenExpirationMs = 1000 * 60 * 10; //10 min
 
 
@@ -24,7 +24,7 @@ public class JwtUtils {
 	public String generateRefreshToken(String subject) {
 		return generateAuthToken(subject, refreshTokenExpirationMs);
 	}
-	public String generateLoginToken(String subject, UUID uuid) {return generateLoginJwtToken(subject, refreshTokenExpirationMs,uuid);}
+	public String generateLoginToken(String subject, UUID uuid) {return generateLoginJwtToken(subject, loginTokenExpirationMs,uuid);}
 	public String generateRegisterToken(String subject,UUID uuid) {return generateRegisterJwtToken(subject,uuid);}
 
 	public String generateAuthToken(String email, int expirationMs) {

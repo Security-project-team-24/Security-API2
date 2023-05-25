@@ -1,13 +1,15 @@
 package SecurityAPI2.Dto;
 
 import SecurityAPI2.Model.Address;
-import SecurityAPI2.Model.Enum.Role;
-import lombok.Getter;
-import lombok.Setter;
+import SecurityAPI2.Model.Enum.UserRole;
+import lombok.*;
 import SecurityAPI2.utils.ValidPassword;
+
+import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class RegisterDto {
     private Long id;
     private String email;
@@ -17,6 +19,9 @@ public class RegisterDto {
     private String name;
     private String surname;
     private String phoneNumber;
-    private Role role;
+    private List<String> roles;
     private Address address;
+
+
+
 }

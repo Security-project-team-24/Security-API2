@@ -1,13 +1,11 @@
 package SecurityAPI2.Controller;
 
-import SecurityAPI2.Dto.TokenDto;
-import SecurityAPI2.Dto.UserDto;
+import SecurityAPI2.Dto.*;
 import SecurityAPI2.Exceptions.UserNotActivatedException;
-import SecurityAPI2.Mapper.UserMapper;
 import SecurityAPI2.Model.Enum.Status;
+import SecurityAPI2.Model.Permission;
+import SecurityAPI2.Model.Role;
 import SecurityAPI2.Model.User;
-import SecurityAPI2.Dto.LoginDto;
-import SecurityAPI2.Dto.RegisterDto;
 import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.UserService;
@@ -16,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
@@ -36,18 +36,58 @@ public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
 
-    private final UserMapper userMapper;
     private final AuthService authService;
+
+
+
+    @PreAuthorize("isAuthenticated() and hasAuthority('administration')")
+    @GetMapping("/roles")
+    public ResponseEntity<List<String>> getRoles() {
+        List<Role> roles = authService.getRoles();
+        List<String> rolesMapped = roles.stream()
+                .map(role -> role.getName())
+                .toList();
+        return ResponseEntity.ok(rolesMapped);
+
+    }
+    @PreAuthorize("isAuthenticated() and hasAuthority('administration')")
+    @GetMapping("/permissions/{role}")
+    public ResponseEntity<RolePermissionsDto> getRolePermissions(@PathVariable String role) {
+        RolePermissionsDto dto = authService.getRolePermissions(role);
+        System.out.println(dto);
+        return ResponseEntity.ok(dto);
+    }
+
+    @PreAuthorize("isAuthenticated() and hasAuthority('administration')")
+    @PostMapping("/permissions/{role}/commit")
+    public ResponseEntity<?> commitPermissions(
+            @PathVariable String role,
+            @RequestBody List<Permission> permissionsGranted
+    ) {
+
+        boolean containsAdministration = permissionsGranted.stream().anyMatch(p -> p.getName().equals("administration"));
+        if(!containsAdministration && role.equals("ADMIN")) {
+            Permission administration = Permission.builder().name("administration").build();
+            permissionsGranted.add(administration);
+        }
+        permissionsGranted.forEach(permission -> System.out.println(permission.getName()));
+        authService.commitPermissions(role, permissionsGranted);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody final LoginDto loginRequest, HttpServletResponse response) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
-        if(userService.findByEmail(email).getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
+        User user = userService.findByEmail(email);
+        if(user == null) throw new BadCredentialsException("Bad credentials!");
+        if(user.getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
         Authentication authStrategy = new UsernamePasswordAuthenticationToken(email, password);
         Authentication authentication = authenticationManager.authenticate(authStrategy);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         TokenDto data = authService.generateTokens(email);
+        System.out.println(data);
         Cookie cookie = createRefreshTokenCookie(data.getRefreshToken());
         response.addCookie(cookie);
         return ResponseEntity.ok(data);
@@ -72,14 +112,16 @@ public class AuthController {
         if(errors.hasErrors()){
             throw new InvalidPasswordFormatException();
         }
-        UserDto userDto = userMapper.userToUserDto(userService.register(registerDto));
+        System.out.println(registerDto.getPassword());
+        User registered = userService.register(registerDto);
+        UserDto userDto = new UserDto(registered);
         return ResponseEntity.ok(userDto);
     }
     @GetMapping("/current")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and hasAuthority('all')")
     public ResponseEntity<UserDto> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         User user = authService.getUserFromToken(authHeader);
-        return ResponseEntity.ok(userMapper.userToUserDto(user));
+        return ResponseEntity.ok(new UserDto(user));
     }
     @GetMapping("/refresh")
     public ResponseEntity<TokenDto> refreshToken(HttpServletRequest request) {
