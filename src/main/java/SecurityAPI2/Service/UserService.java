@@ -200,9 +200,8 @@ public class UserService {
         return skillRepository.findAllByEngineerId(engineerId);
     }
 
-    @Transactional
     public void deleteEngineerSkill(Long skillId){
-        skillRepository.removeSkillById(skillId);
+        skillRepository.deleteById(skillId);
     }
 
     public void uploadCv(MultipartFile file, User user) throws IOException {
