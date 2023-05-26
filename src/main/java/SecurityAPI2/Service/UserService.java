@@ -29,6 +29,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -195,10 +196,23 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public List<Skill> getEngineerSkills(Long engineerId){
+        return skillRepository.findAllByEngineerId(engineerId);
+    }
+
+    @Transactional
+    public void deleteEngineerSkill(Long skillId){
+        skillRepository.removeSkillById(skillId);
+    }
+
     public void uploadCv(MultipartFile file, User user) throws IOException {
         String url = storageService.uploadFile(file);
         Engineer engineer = engineerRepository.findByUser(user);
         engineer.setCvUrl(url);
         engineerRepository.save(engineer);
+    }
+
+    public Engineer getEngineer(User user){
+        return engineerRepository.findByUser(user);
     }
 }

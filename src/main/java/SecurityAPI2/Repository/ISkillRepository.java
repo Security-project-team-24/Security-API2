@@ -10,4 +10,8 @@ import java.util.List;
 @Repository
 public interface ISkillRepository extends JpaRepository<Skill, Long> {
     Skill save(Skill skill);
+
+    List<Skill> findAllByEngineerId(Long engineerId);
+
+    void removeSkillById(Long skillId);
 }

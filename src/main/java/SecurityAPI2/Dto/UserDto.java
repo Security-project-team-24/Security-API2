@@ -1,6 +1,7 @@
 package SecurityAPI2.Dto;
 
 import SecurityAPI2.Model.Address;
+import SecurityAPI2.Model.Engineer;
 import SecurityAPI2.Model.Enum.UserRole;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.Role;
@@ -26,6 +27,7 @@ public class UserDto {
     Address address;
     Status status;
     boolean firstLogged;
+    EngineerDto engineer;
 
 
     public User toModel() {
@@ -73,6 +75,29 @@ public class UserDto {
                 .collect(Collectors.toList());
         this.firstLogged = user.isFirstLogged();
 
+    }
+
+    public UserDto(User user, EngineerDto engineer) {
+        this.id = user.getId();
+        this.name = user.getName();
+        this.surname = user.getSurname();
+        this.email = user.getEmail();
+        this.phoneNumber = user.getPhoneNumber();
+        this.status = user.getStatus();
+        this.address = Address.builder()
+                .id(user.getAddress().getId())
+                .city(user.getAddress().getCity())
+                .country(user.getAddress().getCountry())
+                .zipCode(user.getAddress().getZipCode())
+                .streetNumber(user.getAddress().getStreetNumber())
+                .street(user.getAddress().getStreet())
+                .build();
+        this.roles = user.getRoles()
+                .stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toList());
+        this.firstLogged = user.isFirstLogged();
+        this.engineer = engineer;
     }
 
     public static List<UserDto> toDtos(List<User> users) {
