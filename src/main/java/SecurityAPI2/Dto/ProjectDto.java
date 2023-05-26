@@ -22,6 +22,7 @@ public class ProjectDto {
     public ProjectDto(Project project) {
         this.id = project.getId();
         this.duration = project.getDuration();
+        this.name = project.getName();
         this.projectEmployees = ProjectEmployeeDto.toDtos(project.getProjectEmployees());
     }
 
@@ -30,6 +31,7 @@ public class ProjectDto {
                 .builder()
                 .id(id)
                 .duration(duration)
+                .name(name)
                 .projectEmployees(ProjectEmployeeDto.toModels(projectEmployees))
                 .build();
     }

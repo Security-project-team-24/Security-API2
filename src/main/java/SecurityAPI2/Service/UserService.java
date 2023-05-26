@@ -110,7 +110,7 @@ public class UserService {
     }
     
     public Page<User> findAll(int pageNumber, int pageSize) {
-        return userRepository.findAll(PageRequest.of(pageSize, pageNumber));
+        return userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber), Status.ACTIVATED);
     }
     public void approve(Long id) {
         Optional<User> optionalUser = userRepository.findById(id);
