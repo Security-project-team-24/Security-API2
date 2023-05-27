@@ -77,7 +77,7 @@ public class UserController {
     }
 
     @PutMapping("/change-password")
-    @PreAuthorize("isAuthenticated() and hasAuthority('update_password')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('all')")
     public ResponseEntity changePassword(@Valid @RequestBody final PasswordChangeDto passwordChangeDto, Errors errors, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         if(errors.hasErrors()){
             throw new InvalidPasswordFormatException();
