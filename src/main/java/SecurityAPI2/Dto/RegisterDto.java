@@ -1,6 +1,7 @@
 package SecurityAPI2.Dto;
 
 import SecurityAPI2.Model.Address;
+import SecurityAPI2.Model.Enum.Seniority;
 import SecurityAPI2.Model.Enum.UserRole;
 import lombok.*;
 import SecurityAPI2.utils.ValidPassword;
@@ -21,7 +22,7 @@ public class RegisterDto {
     private String phoneNumber;
     private List<String> roles;
     private Address address;
-
+    private Seniority seniority;
 
 
 }

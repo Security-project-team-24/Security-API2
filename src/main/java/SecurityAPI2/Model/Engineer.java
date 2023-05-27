@@ -1,5 +1,6 @@
 package SecurityAPI2.Model;
 
+import SecurityAPI2.Model.Enum.Seniority;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
@@ -24,11 +25,13 @@ public class Engineer {
     private User user;
     @Column(name = "cvUrl", columnDefinition="TEXT")
     private String cvUrl;
-    @Column(name = "seniority", nullable = true)
-    private LocalDate seniority;
+    @Column(name = "seniority")
+    private Seniority seniority;
+    @Column(name = "hire_date", nullable = true)
+    private LocalDate hireDate;
 
-    public Engineer(User user){
+    public Engineer(User user, Seniority seniority) {
         this.user = user;
-        this.seniority = LocalDate.now();
+        this.seniority = seniority;
     }
 }

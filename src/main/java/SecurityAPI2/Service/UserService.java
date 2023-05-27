@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -79,18 +80,17 @@ public class UserService {
         
         User user = findByEmail(registerDto.getEmail());
 
-        if(user == null){
-            user = initializeUser(registerDto);
-            return userRepository.save(user);
-        }
-
-        if(user.isActivated() || user.isApproved()) {
+        if(user != null) {
             throw new UserAlreadyExistsException();
         }
 
-        User updateUser = initializeUser(registerDto);
-        updateUser.setId(user.getId());
-        return userRepository.save(updateUser);
+        user = initializeUser(registerDto);
+        user = userRepository.save(user);
+        if(user.hasRole(UserRole.ENGINEER)){
+            Engineer engineer = new Engineer(user, registerDto.getSeniority());
+            engineerRepository.save(engineer);
+        }
+        return user;
     }
 
     private User initializeUser(RegisterDto registerDto) {
@@ -122,7 +122,7 @@ public class UserService {
         UUID registerUUID = UUID.randomUUID();
         String registerToken = jwtUtils.generateRegisterToken(user.getEmail(),registerUUID);
         RegistrationApproval registrationApproval = new RegistrationApproval(String.valueOf(registerUUID.toString().hashCode()));
-        registrationApproval = save(registrationApproval);
+        save(registrationApproval);
         emailService.sendApprovedMail(user.getEmail(),registerToken);
     }
     public void activateAccount(String registerToken){
@@ -139,23 +139,29 @@ public class UserService {
                 String.valueOf(registerClaims.get("uuid").toString().hashCode()));
         User user = findByEmail(registerClaims.getSubject());
         if(user == null) throw new InvalidTokenClaimsException();
-        user.setStatus(Status.ACTIVATED);
-        if(user.hasRole(UserRole.ENGINEER)){
-            Engineer engineer = new Engineer(user);
+
+        if(user.hasRole(UserRole.ENGINEER)) {
+            Engineer engineer = engineerRepository.findByUser(user);
+            engineer.setHireDate(LocalDate.now());
             engineerRepository.save(engineer);
         }
+        user.setStatus(Status.ACTIVATED);
         userRepository.save(user);
         delete(registrationApproval);
     }
 
     public void disapprove(Long id, String reason) {
-        boolean doesUserExists = userRepository.findById(id).isPresent();
-        if (!doesUserExists) throw new UserDoesntExistException();
-        final User user = userRepository.findById(id).get();
-        user.setStatus(Status.DISAPPROVED);
-        userRepository.save(user);
+        User user = userRepository.findById(id)
+                .orElseThrow(UserDoesntExistException::new);
+
         save(new RegistrationDisapproval(0L,user.getEmail(),LocalDateTime.now()));
         emailService.sendDisapprovedMail(reason,user.getEmail());
+
+        if(user.hasRole(UserRole.ENGINEER)) {
+            Engineer engineer = engineerRepository.findByUser(user);
+            engineerRepository.delete(engineer);
+        }
+        userRepository.delete(user);
     }
 
     public Page<User> findPendingUsers(int pageNumber, int pageSize) {

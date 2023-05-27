@@ -136,6 +136,13 @@ public class AuthController {
         return ResponseEntity.ok(data);
     }
 
+    @GetMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        Cookie cookie = createRefreshTokenCookie(null);
+        response.addCookie(cookie);
+        return ResponseEntity.ok().build();
+    }
+
     private String getCookie(HttpServletRequest req, String name) {
         return Arrays.stream(req.getCookies())
                 .filter(cookie -> cookie.getName().equals(name))
