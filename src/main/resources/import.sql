@@ -12,7 +12,7 @@ INSERT INTO permissions (name) values ('read_all_users');
 INSERT INTO permissions (name) values ('read_pending_users');
 INSERT INTO permissions (name) values ('update_users_approval');
 INSERT INTO permissions (name) values ('update_password');
-INSERT INTO permissions (name) values ('create_skill');
+INSERT INTO permissions (name) values ('crud_skill');
 INSERT INTO permissions (name) values ('create_cv');
 INSERT INTO permissions (name) values ('administration');
 

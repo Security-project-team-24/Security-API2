@@ -1,11 +1,9 @@
 package SecurityAPI2.Controller;
 
-import SecurityAPI2.Dto.PageDto;
-import SecurityAPI2.Dto.PasswordChangeDto;
-import SecurityAPI2.Dto.SkillDto;
-import SecurityAPI2.Dto.UserDto;
+import SecurityAPI2.Dto.*;
 import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Exceptions.SkillValueInvalid;
+import SecurityAPI2.Model.Skill;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.UserService;
@@ -90,13 +88,35 @@ public class UserController {
     }
 
     @PostMapping("/skill")
-    @PreAuthorize("isAuthenticated() and hasAuthority('create_skill')")
+    @PreAuthorize("isAuthenticated() and hasAuthority('crud_skill')")
     public ResponseEntity addSkill(@Valid @RequestBody SkillDto skillDto, Errors errors, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
         if(errors.hasErrors()){
             throw new SkillValueInvalid();
         }
         final User user = authService.getUserFromToken(authHeader);
         userService.addSkill(skillDto, user);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{engineerId}/skills")
+    @PreAuthorize("isAuthenticated() and hasAuthority('crud_skill')")
+    public ResponseEntity<List<EngineerSkillDto>> getEngineerSkills(@PathVariable Long engineerId){
+        List<Skill> skills = userService.getEngineerSkills(engineerId);
+        return ResponseEntity.ok(EngineerSkillDto.mapSkillToDto(skills));
+    }
+
+    @PatchMapping("/skill")
+    @PreAuthorize("isAuthenticated() and hasAuthority('crud_skill')")
+    public ResponseEntity updateSkill(@RequestBody EngineerSkillDto skillDto, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
+        final User user = authService.getUserFromToken(authHeader);
+        userService.updateSkill(skillDto, user);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/engineer/skill/{skillId}")
+    @PreAuthorize("isAuthenticated() and hasAuthority('crud_skill')")
+    public ResponseEntity deleteEngineerSkill( @PathVariable Long skillId){
+        userService.deleteEngineerSkill(skillId);
         return ResponseEntity.ok().build();
     }
 

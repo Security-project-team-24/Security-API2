@@ -2,7 +2,9 @@ package SecurityAPI2.Controller;
 
 import SecurityAPI2.Dto.*;
 import SecurityAPI2.Exceptions.UserNotActivatedException;
+import SecurityAPI2.Model.Engineer;
 import SecurityAPI2.Model.Enum.Status;
+import SecurityAPI2.Model.Enum.UserRole;
 import SecurityAPI2.Model.Permission;
 import SecurityAPI2.Model.Role;
 import SecurityAPI2.Model.User;
@@ -121,6 +123,10 @@ public class AuthController {
     @PreAuthorize("isAuthenticated() and hasAuthority('all')")
     public ResponseEntity<UserDto> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         User user = authService.getUserFromToken(authHeader);
+        if(user.hasRole(UserRole.ENGINEER)){
+            Engineer engineer = userService.getEngineer(user);
+            return ResponseEntity.ok(new UserDto(user, new EngineerDto(engineer)));
+        }
         return ResponseEntity.ok(new UserDto(user));
     }
     @GetMapping("/refresh")

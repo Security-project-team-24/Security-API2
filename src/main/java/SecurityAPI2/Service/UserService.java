@@ -1,5 +1,6 @@
 package SecurityAPI2.Service;
 
+import SecurityAPI2.Dto.EngineerSkillDto;
 import SecurityAPI2.Dto.PasswordChangeDto;
 import SecurityAPI2.Dto.SkillDto;
 import SecurityAPI2.Exceptions.IncorrectPassword;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -189,10 +191,28 @@ public class UserService {
         Engineer engineer = engineerRepository.findByUser(user);
         ArrayList<Skill> skills = new ArrayList<>();
         for(Skill s : skillDto.getSkills()){
+            if(skillRepository.findSkillByEngineerIdAndSkill(engineer.getId(), s.getSkill()) != null){
+                throw new EngineerAlreadyHasSkillException();
+            }
             skills.add(new Skill(s.getSkill(), s.getStrength(), engineer));
         }
         engineer.setSkills(skills);
         userRepository.save(user);
+    }
+
+    public List<Skill> getEngineerSkills(Long engineerId){
+        return skillRepository.findAllByEngineerId(engineerId);
+    }
+
+    public void deleteEngineerSkill(Long skillId){
+        skillRepository.deleteById(skillId);
+    }
+
+    public void updateSkill(EngineerSkillDto skillDto, User user){
+        Engineer engineer = engineerRepository.findByUser(user);
+        Skill skill = skillRepository.findSkillByEngineerIdAndSkill(engineer.getId(), skillDto.getSkill());
+        skill.setStrength(skillDto.getStrength());
+        skillRepository.save(skill);
     }
 
     public void uploadCv(MultipartFile file, User user) throws IOException {
@@ -200,5 +220,9 @@ public class UserService {
         Engineer engineer = engineerRepository.findByUser(user);
         engineer.setCvUrl(url);
         engineerRepository.save(engineer);
+    }
+
+    public Engineer getEngineer(User user){
+        return engineerRepository.findByUser(user);
     }
 }
