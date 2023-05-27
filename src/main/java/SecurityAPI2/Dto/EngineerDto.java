@@ -1,6 +1,7 @@
 package SecurityAPI2.Dto;
 
 import SecurityAPI2.Model.Engineer;
+import SecurityAPI2.Model.Enum.Seniority;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 public class EngineerDto {
     Long id;
     String cv_url;
-    LocalDate seniority;
+    Seniority seniority;
 
     public EngineerDto(Engineer engineer){
         this.id = engineer.getId();
