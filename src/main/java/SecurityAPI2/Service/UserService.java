@@ -190,6 +190,9 @@ public class UserService {
         Engineer engineer = engineerRepository.findByUser(user);
         ArrayList<Skill> skills = new ArrayList<>();
         for(Skill s : skillDto.getSkills()){
+            if(skillRepository.findSkillByEngineerIdAndSkill(engineer.getId(), s.getSkill()) != null){
+                throw new EngineerAlreadyHasSkillException();
+            }
             skills.add(new Skill(s.getSkill(), s.getStrength(), engineer));
         }
         engineer.setSkills(skills);

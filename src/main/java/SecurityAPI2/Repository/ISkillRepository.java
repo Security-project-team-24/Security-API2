@@ -22,4 +22,6 @@ public interface ISkillRepository extends JpaRepository<Skill, Long> {
     @Modifying
     @Transactional
     void deleteById(@Param("id") Long skillId);
+
+    Skill findSkillByEngineerIdAndSkill(Long engineerId, String skill);
 }
