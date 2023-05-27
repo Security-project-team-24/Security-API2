@@ -1,5 +1,6 @@
 package SecurityAPI2.Service;
 
+import SecurityAPI2.Dto.EngineerSkillDto;
 import SecurityAPI2.Dto.PasswordChangeDto;
 import SecurityAPI2.Dto.SkillDto;
 import SecurityAPI2.Exceptions.IncorrectPassword;
@@ -205,6 +206,13 @@ public class UserService {
 
     public void deleteEngineerSkill(Long skillId){
         skillRepository.deleteById(skillId);
+    }
+
+    public void updateSkill(EngineerSkillDto skillDto, User user){
+        Engineer engineer = engineerRepository.findByUser(user);
+        Skill skill = skillRepository.findSkillByEngineerIdAndSkill(engineer.getId(), skillDto.getSkill());
+        skill.setStrength(skillDto.getStrength());
+        skillRepository.save(skill);
     }
 
     public void uploadCv(MultipartFile file, User user) throws IOException {

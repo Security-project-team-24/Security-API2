@@ -105,6 +105,14 @@ public class UserController {
         return ResponseEntity.ok(EngineerSkillDto.mapSkillToDto(skills));
     }
 
+    @PatchMapping("/skill")
+    @PreAuthorize("isAuthenticated() and hasAuthority('crud_skill')")
+    public ResponseEntity updateSkill(@RequestBody EngineerSkillDto skillDto, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
+        final User user = authService.getUserFromToken(authHeader);
+        userService.updateSkill(skillDto, user);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/engineer/skill/{skillId}")
     @PreAuthorize("isAuthenticated() and hasAuthority('crud_skill')")
     public ResponseEntity deleteEngineerSkill( @PathVariable Long skillId){
