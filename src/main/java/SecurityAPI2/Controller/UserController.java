@@ -3,6 +3,7 @@ package SecurityAPI2.Controller;
 import SecurityAPI2.Dto.*;
 import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Exceptions.SkillValueInvalid;
+import SecurityAPI2.Model.Engineer;
 import SecurityAPI2.Model.Skill;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Service.AuthService;
@@ -127,5 +128,17 @@ public class UserController {
         userService.uploadCv(file, user);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/engineers/{pageNumber}")
+    @PreAuthorize("isAuthenticated() and hasAuthority('all')")
+    public ResponseEntity<PageDto<EngineerDto>> getAllEngineers(@Valid @PathVariable int pageNumber){
+        Page<Engineer> engineerPage = userService.getEngineers(pageNumber);
+        List<EngineerDto> engineers = EngineerDto.engineerDtosFromEngineers(engineerPage.getContent());
+        PageDto<EngineerDto> dto = new PageDto<>();
+        dto.setContent(engineers);
+        dto.setTotalPages(engineerPage.getTotalPages());
+        return ResponseEntity.ok(dto);
+    }
+
 
 }

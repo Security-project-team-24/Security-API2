@@ -1,11 +1,8 @@
 package SecurityAPI2.Controller;
 
-import SecurityAPI2.Dto.ProjectEmployeeDto;
-import SecurityAPI2.Dto.ProjectEmployeeRequest;
-import SecurityAPI2.Dto.UpdateEngineerProjectDto;
+import SecurityAPI2.Dto.*;
 import SecurityAPI2.Model.ProjectEmployee;
 import SecurityAPI2.Model.User;
-import SecurityAPI2.Dto.UserDto;
 import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.ProjectEmployeeService;
 import lombok.RequiredArgsConstructor;
@@ -31,10 +28,9 @@ public class ProjectEmployeeController {
     }
     @GetMapping("/{projectId}/engineers")
     @PreAuthorize("isAuthenticated() and hasAuthority('read_all_project_engineers')")
-    public ResponseEntity<List<ProjectEmployeeDto>> findAllEngineersOnProject(@Valid @PathVariable Long projectId) {
-        List<ProjectEmployee> engineers = projectEmployeeService.findAllEngineersOnProject(projectId);
-        List<ProjectEmployeeDto> dtos = ProjectEmployeeDto.toDtos(engineers);
-        return ResponseEntity.ok(dtos);
+    public ResponseEntity<List<ProjectEngineerDto>> findAllEngineersOnProject(@Valid @PathVariable Long projectId) {
+        List<ProjectEngineerDto> engineers = projectEmployeeService.findAllEngineersOnProject(projectId);
+        return ResponseEntity.ok(engineers);
     }
 
     @GetMapping("/projects")

@@ -231,4 +231,9 @@ public class UserService {
     public Engineer getEngineer(User user){
         return engineerRepository.findByUser(user);
     }
+
+    public Page<Engineer> getEngineers(int pageNumber) {
+        Page<Engineer> page =  engineerRepository.findAll(PageRequest.of(pageNumber, 10));
+        return page;
+    }
 }
