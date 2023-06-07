@@ -232,8 +232,13 @@ public class UserService {
         return engineerRepository.findByUser(user);
     }
 
-    public Page<Engineer> getEngineers(int pageNumber) {
-        Page<Engineer> page =  engineerRepository.findAll(PageRequest.of(pageNumber, 10));
+    public Page<Engineer> getEngineers(int pageNumber,
+                                       String email,
+                                       String name,
+                                       String surname,
+                                       LocalDate fromDate,
+                                       LocalDate toDate) {
+        Page<Engineer> page =  engineerRepository.findByUserEmailContainingAndUserNameContainingAndUserSurnameContainingAndHireDateBetween(email, name, surname, fromDate, toDate, PageRequest.of(pageNumber, 10));
         return page;
     }
 }
