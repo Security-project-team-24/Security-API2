@@ -1,6 +1,8 @@
 package SecurityAPI2.Service;
 
 import SecurityAPI2.Dto.ProjectEmployeeRequest;
+import SecurityAPI2.Dto.ProjectEngineerDto;
+import SecurityAPI2.Model.Engineer;
 import SecurityAPI2.Model.Enum.UserRole;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.Project;
@@ -24,6 +26,7 @@ public class ProjectEmployeeService {
     private final IProjectEmployeeRepository projectEmployeeRepository;
     private final IProjectRepository projectRepository;
     private final IUserRepository userRepository;
+    private final UserService userService;
     public ProjectEmployee addProjectEmployee(ProjectEmployeeRequest request) {
         Project project = projectRepository.getById(request.getProjectId());
         User employee = userRepository.getById(request.getEmployeeId());
@@ -32,8 +35,14 @@ public class ProjectEmployeeService {
         return projectEmployee;
     }
 
-    public List<ProjectEmployee> findAllEngineersOnProject(Long projectId){
-        return projectEmployeeRepository.findByProjectIdAndEmployee_Role(projectId, UserRole.ENGINEER.getValue());
+    public List<ProjectEngineerDto> findAllEngineersOnProject(Long projectId){
+        List<ProjectEmployee> engineerUsers = projectEmployeeRepository.findByProjectIdAndEmployee_Role(projectId, UserRole.ENGINEER.getValue());
+        List<ProjectEngineerDto> engineers = new ArrayList<>();
+        for(ProjectEmployee employee: engineerUsers) {
+            Engineer engineer = userService.getEngineer(employee.getEmployee());
+            engineers.add(new ProjectEngineerDto(employee, engineer));
+        }
+        return engineers;
     }
 
     public List<ProjectEmployee> findAllEngineerProjects(Long employeeId) {
