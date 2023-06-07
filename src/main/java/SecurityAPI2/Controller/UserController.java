@@ -9,6 +9,7 @@ import SecurityAPI2.Model.User;
 import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.UserService;
 import lombok.RequiredArgsConstructor;
+import net.bytebuddy.asm.Advice;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,6 +23,8 @@ import org.springframework.data.domain.Page;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -129,10 +132,16 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/engineers/{pageNumber}")
+    @GetMapping("/engineers")
     @PreAuthorize("isAuthenticated() and hasAuthority('all')")
-    public ResponseEntity<PageDto<EngineerDto>> getAllEngineers(@Valid @PathVariable int pageNumber){
-        Page<Engineer> engineerPage = userService.getEngineers(pageNumber);
+    public ResponseEntity<PageDto<EngineerDto>> getAllEngineers(@Valid @RequestParam int pageNumber,
+                                                                @Valid @RequestParam String email,
+                                                                @Valid @RequestParam String name,
+                                                                @Valid @RequestParam String surname,
+                                                                @Valid @RequestParam String fromDate,
+                                                                @Valid @RequestParam String toDate){
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        Page<Engineer> engineerPage = userService.getEngineers(pageNumber, email.trim(), name.trim(), surname.trim(), LocalDate.parse(fromDate, formatter), LocalDate.parse(toDate, formatter));
         List<EngineerDto> engineers = EngineerDto.engineerDtosFromEngineers(engineerPage.getContent());
         PageDto<EngineerDto> dto = new PageDto<>();
         dto.setContent(engineers);

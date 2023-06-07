@@ -7,9 +7,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface IEngineerRepository extends JpaRepository<Engineer, Long> {
     Engineer findByUser(User user);
-    Page<Engineer> findAll(Pageable pageable);
+    Page<Engineer> findByUserEmailContainingIgnoreCaseAndUserNameContainingIgnoreCaseAndUserSurnameContainingIgnoreCaseAndHireDateBetween(String email, String firstName, String surname, LocalDate fromDate, LocalDate toDate, Pageable pageable);
 }
