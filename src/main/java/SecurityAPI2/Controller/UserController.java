@@ -132,14 +132,14 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/engineers/{pageNumber}/{email}/{name}/{surname}/{fromDate}/{toDate}")
-    //@PreAuthorize("isAuthenticated() and hasAuthority('all')")
-    public ResponseEntity<PageDto<EngineerDto>> getAllEngineers(@Valid @PathVariable int pageNumber,
-                                                                @Valid @PathVariable String email,
-                                                                @Valid @PathVariable String name,
-                                                                @Valid @PathVariable String surname,
-                                                                @Valid @PathVariable String fromDate,
-                                                                @Valid @PathVariable String toDate){
+    @GetMapping("/engineers")
+    @PreAuthorize("isAuthenticated() and hasAuthority('all')")
+    public ResponseEntity<PageDto<EngineerDto>> getAllEngineers(@Valid @RequestParam int pageNumber,
+                                                                @Valid @RequestParam String email,
+                                                                @Valid @RequestParam String name,
+                                                                @Valid @RequestParam String surname,
+                                                                @Valid @RequestParam String fromDate,
+                                                                @Valid @RequestParam String toDate){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         Page<Engineer> engineerPage = userService.getEngineers(pageNumber, email.trim(), name.trim(), surname.trim(), LocalDate.parse(fromDate, formatter), LocalDate.parse(toDate, formatter));
         List<EngineerDto> engineers = EngineerDto.engineerDtosFromEngineers(engineerPage.getContent());

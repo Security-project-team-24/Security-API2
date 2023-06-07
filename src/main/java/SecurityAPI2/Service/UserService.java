@@ -238,7 +238,7 @@ public class UserService {
                                        String surname,
                                        LocalDate fromDate,
                                        LocalDate toDate) {
-        Page<Engineer> page =  engineerRepository.findByUserEmailContainingAndUserNameContainingAndUserSurnameContainingAndHireDateBetween(email, name, surname, fromDate, toDate, PageRequest.of(pageNumber, 10));
+        Page<Engineer> page =  engineerRepository.findByUserEmailContainingIgnoreCaseAndUserNameContainingIgnoreCaseAndUserSurnameContainingIgnoreCaseAndHireDateBetween(email, name, surname, fromDate, toDate, PageRequest.of(pageNumber, 10));
         return page;
     }
 }

@@ -12,5 +12,5 @@ import java.util.List;
 
 public interface IEngineerRepository extends JpaRepository<Engineer, Long> {
     Engineer findByUser(User user);
-    Page<Engineer> findByUserEmailContainingAndUserNameContainingAndUserSurnameContainingAndHireDateBetween(String email, String firstName, String surname, LocalDate fromDate, LocalDate toDate, Pageable pageable);
+    Page<Engineer> findByUserEmailContainingIgnoreCaseAndUserNameContainingIgnoreCaseAndUserSurnameContainingIgnoreCaseAndHireDateBetween(String email, String firstName, String surname, LocalDate fromDate, LocalDate toDate, Pageable pageable);
 }
