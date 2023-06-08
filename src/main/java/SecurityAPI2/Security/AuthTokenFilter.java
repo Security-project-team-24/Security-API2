@@ -1,5 +1,6 @@
 package SecurityAPI2.Security;
 
+import SecurityAPI2.Exceptions.UserBlockedException;
 import  SecurityAPI2.Security.UserDetails.UserDetailsServiceImpl;
 
 import java.io.IOException;
@@ -41,7 +42,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			}
-		} catch (final Exception e) {
+		}
+		catch (final UserBlockedException e) {
+			response.setStatus(401);
+			return;
+		}
+		catch (final Exception e) {
 			System.out.println("Cannot set user authentication: " + e.getMessage());
 			return;
 		}

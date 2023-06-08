@@ -68,6 +68,7 @@ public class SecurityConfig {
 			.authorizeRequests().antMatchers("/auth/send/login/**").permitAll().and()
 			.authorizeRequests().antMatchers("/auth/register").permitAll().and()
 			.authorizeRequests().antMatchers("/user/activate").permitAll().and()
+			.authorizeRequests().antMatchers("/user/forgot-password/**").permitAll().and()
 			.authorizeRequests().antMatchers("/auth/refresh").permitAll()
 			.anyRequest().authenticated();
 

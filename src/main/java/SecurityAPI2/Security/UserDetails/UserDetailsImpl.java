@@ -14,11 +14,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 public class UserDetailsImpl implements UserDetails {
 	private static final long serialVersionUID = 1L;
-
 	private final Long id;
-
 	private final String email;
-
 	@JsonIgnore
 	private final String password;
 
@@ -40,10 +37,6 @@ public class UserDetailsImpl implements UserDetails {
 				authorities.add(new SimpleGrantedAuthority(permission.getName()));
 			});
 		}));
-
-
-//		authorities.add(new SimpleGrantedAuthority(user.getRole().toString()));
-
 		return new UserDetailsImpl(
 			user.getId(),
 			user.getEmail(),

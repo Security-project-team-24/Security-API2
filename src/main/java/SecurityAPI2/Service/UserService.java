@@ -123,7 +123,22 @@ public class UserService {
         String registerToken = jwtUtils.generateRegisterToken(user.getEmail(),registerUUID);
         RegistrationApproval registrationApproval = new RegistrationApproval(String.valueOf(registerUUID.toString().hashCode()));
         save(registrationApproval);
+        userRepository.save(user);
         emailService.sendApprovedMail(user.getEmail(),registerToken);
+    }
+    public void block(Long id) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) throw new UserDoesntExistException();
+        User user = optionalUser.get();
+        user.setBlocked(true);
+        userRepository.save(user);
+    }
+    public void unblock(Long id) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) throw new UserDoesntExistException();
+        User user = optionalUser.get();
+        user.setBlocked(false);
+        userRepository.save(user);
     }
     public void activateAccount(String registerToken){
         Claims registerClaims;
@@ -189,6 +204,16 @@ public class UserService {
             throw new InvalidConfirmPassword();
         }
         user.setPassword(encoder.encode(passwordChangeDto.getNewPassword()));
+        user.setFirstLogged(false);
+        userRepository.save(user);
+    }
+
+    public void forgotPassword(String email) {
+        User user = findByEmail(email);
+        if(user == null) throw new UserDoesntExistException();
+        String password = "A!" + UUID.randomUUID().toString().replace("-", "");
+        emailService.sendForgotPasswordMail(password,user.getEmail());
+        user.setPassword(encoder.encode(password));
         user.setFirstLogged(false);
         userRepository.save(user);
     }

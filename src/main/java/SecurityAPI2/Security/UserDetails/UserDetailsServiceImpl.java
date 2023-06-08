@@ -1,5 +1,6 @@
 package SecurityAPI2.Security.UserDetails;
 
+import SecurityAPI2.Exceptions.UserBlockedException;
 import SecurityAPI2.Repository.IUserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 		final var user = userRepository.findByEmail(email);
 		if (user == null) {
 			throw new UsernameNotFoundException(email);
+		}
+		System.out.println("stigao!");
+		if (user.isBlocked()) {
+			throw new UserBlockedException();
 		}
 		return UserDetailsImpl.build(user);
 	}

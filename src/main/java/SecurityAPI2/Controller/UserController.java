@@ -63,6 +63,20 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/block/{id}")
+    @PreAuthorize("isAuthenticated() and hasAuthority('block_user')")
+    public ResponseEntity<Void> block(@PathVariable Long id) {
+        userService.block(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/unblock/{id}")
+    @PreAuthorize("isAuthenticated() and hasAuthority('unblock_user')")
+    public ResponseEntity<Void> unblock(@PathVariable Long id) {
+        userService.unblock(id);
+        return ResponseEntity.ok().build();
+    }
+
     @PatchMapping("/disapprove/{id}/{reason}")
     @PreAuthorize("isAuthenticated() and hasAuthority('update_users_approval')")
     public ResponseEntity<Void> disapprove(@PathVariable Long id, @PathVariable final String reason) {
@@ -84,6 +98,12 @@ public class UserController {
         }
         final User user = authService.getUserFromToken(authHeader);
         userService.changePassword(user, passwordChangeDto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/forgot-password/{email}")
+    public ResponseEntity forgotPassword(@PathVariable String email) {
+        userService.forgotPassword(email);
         return ResponseEntity.ok().build();
     }
 

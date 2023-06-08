@@ -28,7 +28,6 @@ public class EmailService implements IEmailService{
         details.setMsgBody("Welcome to our company!<br/>" +
                 "You can <a href=\"http://localhost:3000/user/activation/"+registerToken+"\">Activate your account here!<a/></h2> <br/>");
         details.setSubject("Welcome email from company 24");
-//        sendEmail(details);
         emails.add(details);
     }
 
@@ -40,7 +39,6 @@ public class EmailService implements IEmailService{
         details.setMsgBody("This is your email login!<br/>" +
                 "You can login <a href=\"http://localhost:3000/passwordless/login/"+token+"\">here!<a/></h2> <br/>");
         details.setSubject("Login via email from company 24");
-//        sendEmail(details);
         emails.add(details);
     }
 
@@ -51,9 +49,18 @@ public class EmailService implements IEmailService{
         details.setMsgBody("Sorry to inform you.<br/>" +
                 "Your application for registration in our company was denied because:"+ reason);
         details.setSubject("Information from company 24");
-//        sendEmail(details);
         emails.add(details);
     }
+
+    public void sendForgotPasswordMail(String password, String email)
+    {
+        EmailDetails details = new EmailDetails();
+        details.setRecipient(email);
+        details.setMsgBody("Your new password is: " + password);
+        details.setSubject("Forgot password company 24");
+        emails.add(details);
+    }
+    
     private void sendEmail(EmailDetails details){
         try {
             MimeMessage mailMessage = javaMailSender.createMimeMessage();
