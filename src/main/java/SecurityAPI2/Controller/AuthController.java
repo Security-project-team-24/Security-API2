@@ -1,5 +1,6 @@
 package SecurityAPI2.Controller;
 
+import SecurityAPI2.Crypto.SymetricKeyDecription;
 import SecurityAPI2.Dto.*;
 import SecurityAPI2.Exceptions.UserNotActivatedException;
 import SecurityAPI2.Model.Engineer;
@@ -11,6 +12,7 @@ import SecurityAPI2.Model.User;
 import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.UserService;
+import SecurityAPI2.utils.CryptoHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -81,7 +83,9 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody final LoginDto loginRequest, HttpServletResponse response) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
+        System.out.println("stigaop");
         User user = userService.findByEmail(email);
+        System.out.println(user);
         if(user == null) throw new BadCredentialsException("Bad credentials!");
         if(user.getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
         Authentication authStrategy = new UsernamePasswordAuthenticationToken(email, password);
@@ -89,7 +93,6 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         TokenDto data = authService.generateTokens(email);
-        System.out.println(data);
         Cookie cookie = createRefreshTokenCookie(data.getRefreshToken());
         response.addCookie(cookie);
         return ResponseEntity.ok(data);
@@ -114,7 +117,6 @@ public class AuthController {
         if(errors.hasErrors()){
             throw new InvalidPasswordFormatException();
         }
-        System.out.println(registerDto.getPassword());
         User registered = userService.register(registerDto);
         UserDto userDto = new UserDto(registered);
         return ResponseEntity.ok(userDto);
@@ -124,8 +126,13 @@ public class AuthController {
     public ResponseEntity<UserDto> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         User user = authService.getUserFromToken(authHeader);
         if(user.hasRole(UserRole.ENGINEER)){
+            System.out.println("dosao");
             Engineer engineer = userService.getEngineer(user);
-            return ResponseEntity.ok(new UserDto(user, new EngineerDto(engineer)));
+            System.out.println("dosao1");
+            UserDto userDto = new UserDto(user, new EngineerDto(engineer));
+            System.out.println("dosao2");
+
+            return ResponseEntity.ok(userDto);
         }
         return ResponseEntity.ok(new UserDto(user));
     }

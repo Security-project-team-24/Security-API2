@@ -1,5 +1,6 @@
 package SecurityAPI2.Service;
 
+import SecurityAPI2.Crypto.SymetricKeyEncription;
 import SecurityAPI2.Dto.EngineerSkillDto;
 import SecurityAPI2.Dto.PasswordChangeDto;
 import SecurityAPI2.Dto.SkillDto;
@@ -18,6 +19,8 @@ import SecurityAPI2.Service.Storage.IStorageService;
 
 import SecurityAPI2.Service.Email.EmailService;
 
+import SecurityAPI2.utils.CryptoHelper;
+import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +30,11 @@ import SecurityAPI2.Model.User;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,6 +53,8 @@ public class UserService {
     private final IRegistrationApprovalRepository registrationApprovalRepository;
     private final IRegistrationDisapprovalRepository registrationDisapprovalRepository;
     private final JwtUtils jwtUtils;
+    private final String nameKey = Dotenv.load().get("NAME_KEY");
+
 
     private RegistrationDisapproval save(RegistrationDisapproval registrationDisapproval) {
         return registrationDisapprovalRepository.save(registrationDisapproval);
@@ -100,19 +104,24 @@ public class UserService {
             throw new RolesEmptyException();
         }
         roles.add(new Role(dtoRoles.get(0)));
-
         User user = new User(
                 registerDto.getEmail(), encoder.encode(registerDto.getPassword()),
                 registerDto.getName(),
                 registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getAddress(), roles
         );
+        user = CryptoHelper.encryptUser(user);
         user.setFirstLogged(user.hasRole(UserRole.ADMIN));
         user.setStatus(user.hasRole(UserRole.ADMIN) ? Status.ACTIVATED : Status.PENDING);
         return user;
     }
-    
+
+
     public Page<User> findAll(int pageNumber, int pageSize) {
-        return userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber), Status.ACTIVATED);
+        Page<User> users = userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber), Status.ACTIVATED);
+        for(User user : users) {
+           CryptoHelper.decryptUser(user);
+        }
+        return users;
     }
     public void approve(Long id) {
         Optional<User> optionalUser = userRepository.findById(id);
@@ -165,7 +174,11 @@ public class UserService {
     }
 
     public Page<User> findPendingUsers(int pageNumber, int pageSize) {
-        return userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber),Status.PENDING);
+        Page<User> users = userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber),Status.PENDING);
+        for(User user : users) {
+            CryptoHelper.decryptUser(user);
+        }
+        return users;
     }
     public User update(final User newUser) {
         final User user = userRepository.findById(newUser.getId()).get();
@@ -177,7 +190,7 @@ public class UserService {
         user.getAddress().setCity(newUser.getAddress().getCity());
         user.getAddress().setZipCode(newUser.getAddress().getZipCode());
         user.getAddress().setCountry(newUser.getAddress().getCountry());
-
+        CryptoHelper.encryptUser(user);
         return userRepository.save(user);
     }
 
@@ -239,6 +252,7 @@ public class UserService {
                                        LocalDate fromDate,
                                        LocalDate toDate) {
         Page<Engineer> page =  engineerRepository.findByUserEmailContainingIgnoreCaseAndUserNameContainingIgnoreCaseAndUserSurnameContainingIgnoreCaseAndHireDateBetween(email, name, surname, fromDate, toDate, PageRequest.of(pageNumber, 10));
+        CryptoHelper.decryptEngineers(page.getContent());
         return page;
     }
 }

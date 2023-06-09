@@ -11,7 +11,9 @@ import SecurityAPI2.Model.User;
 import SecurityAPI2.Repository.IProjectEmployeeRepository;
 import SecurityAPI2.Repository.IProjectRepository;
 import SecurityAPI2.Repository.IUserRepository;
+import SecurityAPI2.utils.CryptoHelper;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.codec.digest.Crypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +42,7 @@ public class ProjectEmployeeService {
         List<ProjectEngineerDto> engineers = new ArrayList<>();
         for(ProjectEmployee employee: engineerUsers) {
             Engineer engineer = userService.getEngineer(employee.getEmployee());
+            employee.setEmployee(CryptoHelper.decryptUser(employee.getEmployee()));
             engineers.add(new ProjectEngineerDto(employee, engineer));
         }
         return engineers;
@@ -70,7 +73,7 @@ public class ProjectEmployeeService {
         List<User> usersNotWorkingOnProject = allEmployees.stream()
                 .filter(user -> !projectEmployees.contains(user))
                 .collect(Collectors.toList());
-        return usersNotWorkingOnProject;
+        return CryptoHelper.decryptUsers(usersNotWorkingOnProject);
     }
 
     public List<ProjectEmployee> findManagerProjects(User user){
