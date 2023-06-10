@@ -54,6 +54,15 @@ public class EmailService implements IEmailService{
 //        sendEmail(details);
         emails.add(details);
     }
+
+    public void sendQrCode(String email, String qrCodeUrl){
+        EmailDetails details = new EmailDetails();
+        details.setRecipient(email);
+        details.setMsgBody("test" + "<img src=\"" + qrCodeUrl +"\"/>");
+
+        details.setSubject("QR code for google authentication");
+        emails.add(details);
+    }
     private void sendEmail(EmailDetails details){
         try {
             MimeMessage mailMessage = javaMailSender.createMimeMessage();

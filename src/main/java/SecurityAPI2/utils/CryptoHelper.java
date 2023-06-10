@@ -17,6 +17,7 @@ public class CryptoHelper {
     private static final String addressKey = Dotenv.load().get("ADDRESS_KEY");
     private static final String phoneKey = Dotenv.load().get("PHONE_KEY");
     private static final String emailKey = Dotenv.load().get("EMAIL_KEY");
+    private static final String authSecretKey = Dotenv.load().get("AUTH_SECRET_KEY");
 
 
     public static User decryptUser(User user) {
@@ -24,10 +25,12 @@ public class CryptoHelper {
         String surname = SymetricKeyDecription.decrypt(user.getSurname(), DatatypeConverter.parseHexBinary(surnameKey));
         String phoneNumber = SymetricKeyDecription.decrypt(user.getPhoneNumber(), DatatypeConverter.parseHexBinary(phoneKey));
         Address address = decryptAddress(user.getAddress());
+        String authSecret = SymetricKeyDecription.decrypt(user.getAuthSecret(), DatatypeConverter.parseHexBinary(authSecretKey));
         user.setName(name);
         user.setSurname(surname);
         user.setPhoneNumber(phoneNumber);
         user.setAddress(address);
+        user.setAuthSecret(authSecret);
         return user;
     }
 
@@ -37,11 +40,13 @@ public class CryptoHelper {
         String phoneNumber = SymetricKeyEncription.encrypt(user.getPhoneNumber(), DatatypeConverter.parseHexBinary(phoneKey));
 //        String email = SymetricKeyEncription.encrypt(user.getEmail(), DatatypeConverter.parseHexBinary(emailKey));
         Address address = encryptAddress(user.getAddress());
+        String authSecret = SymetricKeyEncription.encrypt(user.getAuthSecret(), DatatypeConverter.parseHexBinary(authSecretKey));
         user.setName(name);
         user.setSurname(surname);
         user.setPhoneNumber(phoneNumber);
 //        user.setEmail(email);
         user.setAddress(address);
+        user.setAuthSecret(authSecret);
         return user;
     }
 

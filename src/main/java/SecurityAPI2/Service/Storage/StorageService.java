@@ -29,6 +29,7 @@ public class StorageService implements IStorageService {
 
         // Get file information
         String fileName = file.getOriginalFilename();
+        System.out.println("Original filename is " + fileName);
         String contentType = file.getContentType();
 
         // Set the BlobId, BlobInfo, and upload the file to Firebase Storage
