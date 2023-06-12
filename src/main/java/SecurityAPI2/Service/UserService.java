@@ -14,10 +14,12 @@ import SecurityAPI2.Model.Enum.UserRole;
 import SecurityAPI2.Repository.*;
 
 import SecurityAPI2.Security.JwtUtils;
-import SecurityAPI2.Service.Storage.IStorageService;
+import SecurityAPI2.Service.CVFile.ICVFileService;
 
 import SecurityAPI2.Service.Email.EmailService;
 
+import SecurityAPI2.utils.CV.CVEncryption;
+import SecurityAPI2.utils.CV.DocumentConverter;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +29,10 @@ import SecurityAPI2.Model.User;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Document;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -46,11 +47,13 @@ public class UserService {
     private final ISkillRepository skillRepository;
     private final IEngineerRepository engineerRepository;
     private final BCryptPasswordEncoder encoder;
-    private final IStorageService storageService;
     private final EmailService emailService;
     private final IRegistrationApprovalRepository registrationApprovalRepository;
     private final IRegistrationDisapprovalRepository registrationDisapprovalRepository;
     private final JwtUtils jwtUtils;
+    private final CVEncryption cvEncryption;
+    private final ICVFileService cvFileService;
+    private final DocumentConverter documentConverter;
 
     private RegistrationDisapproval save(RegistrationDisapproval registrationDisapproval) {
         return registrationDisapprovalRepository.save(registrationDisapproval);
@@ -246,11 +249,38 @@ public class UserService {
         skillRepository.save(skill);
     }
 
-    public void uploadCv(MultipartFile file, User user) throws IOException {
-        String url = storageService.uploadFile(file);
+    public void uploadCv(MultipartFile multipartFile, User user) {
         Engineer engineer = engineerRepository.findByUser(user);
-        engineer.setCvUrl(url);
+        
+        if(engineer.getCvName() != null) cvFileService.deleteDocument(engineer.getCvName());
+        
+        String CVName = UUID.randomUUID().toString().replace("-", "");
+        engineer.setCvName(CVName);
+
+        Document file = null;
+        try {
+            file = documentConverter.convertMultipartFileToDocument(multipartFile);
+        } catch (Exception e) {
+            throw new DocumentConversionException();
+        }
+        Document encryptedFile = cvEncryption.encrypt(file);
+        cvFileService.saveDocument(encryptedFile,CVName);
         engineerRepository.save(engineer);
+    }
+
+    public MultipartFile findCVForEngineer(User user) {
+        Engineer engineer = engineerRepository.findByUser(user);
+        String CVName = engineer.getCvName();
+        if(CVName == null) throw new CVDoesntExistsException();
+        Document encryptedFile = cvFileService.loadDocument(CVName);
+        Document file = cvEncryption.decrypt(encryptedFile);
+        return documentConverter.convertDocumentToMultipartFile(file);
+    }
+
+    public MultipartFile findCVByName(String fileName) {
+        Document encryptedFile = cvFileService.loadDocument(fileName);
+        Document file = cvEncryption.decrypt(encryptedFile);
+        return documentConverter.convertDocumentToMultipartFile(file);
     }
 
     public Engineer getEngineer(User user){

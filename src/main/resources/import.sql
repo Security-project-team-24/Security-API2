@@ -17,6 +17,7 @@ INSERT INTO permissions (name) values ('create_cv');
 INSERT INTO permissions (name) values ('administration');
 INSERT INTO permissions (name) values ('block_user');
 INSERT INTO permissions (name) values ('unblock_user');
+INSERT INTO permissions (name) values ('download_cv');
 
 INSERT INTO roles (name) values ('ADMIN');
 INSERT INTO roles (name) values ('PROJECT_MANAGER');
@@ -35,6 +36,9 @@ INSERT INTO permissions_roles (roles_name, permissions_id) values ('PROJECT_MANA
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('HR_MANAGER', 1);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('ENGINEER', 1);
 
+INSERT INTO permissions_roles (roles_name, permissions_id) values ('ADMIN', 20);
+INSERT INTO permissions_roles (roles_name, permissions_id) values ('HR_MANAGER', 20);
+INSERT INTO permissions_roles (roles_name, permissions_id) values ('ENGINEER', 20);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('ADMIN', 18);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('ADMIN', 19);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('ADMIN', 2);

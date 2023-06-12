@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?><ns1:OutgoingInvoices xmlns:ns1="http://www.example.com/"><xenc:EncryptedData xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" Type="http://www.w3.org/2001/04/xmlenc#Content"><xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc"/><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+<ds:KeyName>Encryption Key</ds:KeyName>
+<xenc:EncryptedKey><xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5"/><xenc:CipherData><xenc:CipherValue>TDLvfOoKr4nBZssis+R154EqYeIaz6V25yaCE/sZ5Q0Y1ISrp1DJ62zAseW4In90n4lxeTBsAtWS&#13;
+2OVY8kpMv2h0ZOWyCZWfrEFWSk01o6Q7tXk1ifTURBW3IDT2YLQ+2WN8ICT0QonbzWSmu2tba6dW&#13;
+yDfOC0wkwlLV5CgqhiRp7bfNRd6ygCvRWZhTjTljIPcCAfZuq6E0iYpFLSJVC+aF2XLYpj9YATWo&#13;
+oryfMBYjHyF7N8mEY9IzurfCP0htnNQYvw/KJHL+pYxBjzvPc8PuFpBHwOv+MrkC7grJqSyCKJUR&#13;
+VT2OzNTs27NAHhV3Sq9w0kUoEtRQndd0zze03A==</xenc:CipherValue></xenc:CipherData></xenc:EncryptedKey></ds:KeyInfo><xenc:CipherData><xenc:CipherValue>3DSsjM/Z3DDhWxUcWz9USF/iE0Jea/vyzwsRHJzKTWYibTeY3/HbPP2y72f6g3+apC97VHWhHFEq&#13;
+81rjn3rhmcui5GPH0BZBNbukTPZW2XPJnrHmtz7iDq3WHJ7wpoCFROvGD2LTAsCI3S4de4rdTV6k&#13;
+4bGXkVkn6HDkbNtEKLBqREmBw+7zIhON0CcD8SI0ImmF/htdhOtl4TBTQHuozVndS2Ktb10pdT1H&#13;
+fmbVT0bQbRGDs4G/iVsuCuYnGLTNU0elUdbx95+d1SrvQFFsBjb5hZMqRyg+aTB56No/Bi2RH8O2&#13;
+6YmYEyoRegBen+W5HphMZ8hegeccigDLQBPRxyoNmEQ5F6ySU2BoYSx45aHf+F1zPJcj7ZhsSA4g&#13;
+h0p70BPMFb9v4AjLOR/i61o8SyVU5CmV/DfzmkPKIRomlvqmQ/AqNb9mZe3Tzg8YLY7iX5XiX5FX&#13;
+Am8C2sIG2VXJMIUqWmnJR88Pg+30p9vWfLZxuRhG5v5VIVJS+zESgjP+W+xD451cwHRSisi+sx9B&#13;
+Kuw6UTsWk6tULmBtUixgFdRsl7yhHld4FZcp0qTnqdB4k8aXutrV2UarKkkKLPWGKIcFqSPD5OLX&#13;
+UgMXQQwprynZqZpY98CX8WpjGGOv1BDbv6rs0jEYaPC2/ORLq0TiIzgna9Yf33WGXObxtQiLvE/i&#13;
+EDA/QGFJLd2JsWuHKQ8kjVs5TOS/6z88u5tuBLrDXY6iigM7OwiqVB/RaYO+aJbzOY/NpBJd/APd&#13;
+lzVIlf6YiTr2+WDsT10hiYZ2mYUC9gfltLF9T/RayN5stxWhDQB8GLybvmXDsNWAVHEjnYSps7Fm&#13;
+nvFB6alRxwN4b59B0kwPDUWfNH8JaHdYUIIV23pTsuV8gXI+lHLgzGOQ3xvDQ7tHaspaDlk=</xenc:CipherValue></xenc:CipherData></xenc:EncryptedData></ns1:OutgoingInvoices>

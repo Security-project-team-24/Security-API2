@@ -1,10 +1,7 @@
 package SecurityAPI2.Model;
 
-import com.google.cloud.Identity;
 import lombok.*;
-import org.hibernate.annotations.Cascade;
 
-import javax.annotation.processing.Generated;
 import javax.persistence.*;
 import java.util.Set;
 
