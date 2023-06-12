@@ -15,14 +15,12 @@ import java.util.List;
 @NoArgsConstructor
 public class EngineerDto {
     Long id;
-    String cv_url;
     Seniority seniority;
     UserDto user;
     LocalDate hireDate;
 
     public EngineerDto(Engineer engineer){
         this.id = engineer.getId();
-        this.cv_url = engineer.getCvUrl();
         this.seniority = engineer.getSeniority();
         this.user = new UserDto(engineer.getUser());
         this.hireDate = engineer.getHireDate();
