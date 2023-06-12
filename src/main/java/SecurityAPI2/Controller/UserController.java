@@ -164,7 +164,16 @@ public class UserController {
     public ResponseEntity<?> getCv(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
         final User user = authService.getUserFromToken(authHeader);
         MultipartFile cv = userService.findCVForEngineer(user);
-        System.out.println( new String(cv.getBytes(), StandardCharsets.UTF_8));
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(cv.getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + cv.getName() + "\"")
+                .body(cv.getBytes());
+    }
+
+    @GetMapping("/cv/download/{fileName}")
+    @PreAuthorize("isAuthenticated() and hasAuthority('download_cv')")
+    public ResponseEntity<?> getCvByFileName(@PathVariable String fileName, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
+        MultipartFile cv = userService.findCVByName(fileName);
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(cv.getContentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + cv.getName() + "\"")

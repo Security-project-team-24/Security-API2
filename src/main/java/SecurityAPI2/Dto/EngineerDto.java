@@ -18,12 +18,15 @@ public class EngineerDto {
     Seniority seniority;
     UserDto user;
     LocalDate hireDate;
+    
+    String cvName;
 
     public EngineerDto(Engineer engineer){
         this.id = engineer.getId();
         this.seniority = engineer.getSeniority();
         this.user = new UserDto(engineer.getUser());
         this.hireDate = engineer.getHireDate();
+        this.cvName = engineer.getCvName();
     }
 
     public static List<EngineerDto> engineerDtosFromEngineers(List<Engineer> engineers){

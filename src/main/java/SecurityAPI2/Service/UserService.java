@@ -277,6 +277,12 @@ public class UserService {
         return documentConverter.convertDocumentToMultipartFile(file);
     }
 
+    public MultipartFile findCVByName(String fileName) {
+        Document encryptedFile = cvFileService.loadDocument(fileName);
+        Document file = cvEncryption.decrypt(encryptedFile);
+        return documentConverter.convertDocumentToMultipartFile(file);
+    }
+
     public Engineer getEngineer(User user){
         return engineerRepository.findByUser(user);
     }

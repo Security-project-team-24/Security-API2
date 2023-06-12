@@ -36,7 +36,7 @@ INSERT INTO permissions_roles (roles_name, permissions_id) values ('PROJECT_MANA
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('HR_MANAGER', 1);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('ENGINEER', 1);
 
-
+INSERT INTO permissions_roles (roles_name, permissions_id) values ('ADMIN', 20);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('HR_MANAGER', 20);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('ENGINEER', 20);
 INSERT INTO permissions_roles (roles_name, permissions_id) values ('ADMIN', 18);
