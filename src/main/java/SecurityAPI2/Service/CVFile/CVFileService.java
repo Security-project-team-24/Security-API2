@@ -1,5 +1,6 @@
 package SecurityAPI2.Service.CVFile;
 
+import SecurityAPI2.Exceptions.CVDoesntExistsException;
 import SecurityAPI2.utils.CV.CVEncryption;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,7 +32,10 @@ public class CVFileService implements  ICVFileService {
             dbf.setNamespaceAware(true);
             DocumentBuilder db = dbf.newDocumentBuilder();
             return db.parse(new File(OUT_PATH + file + ".xml"));
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
+            throw new CVDoesntExistsException("Engineer didn't add cv!");
+        }
+        catch (Exception e) {
             e.printStackTrace();
             return null;
         }
