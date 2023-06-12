@@ -271,7 +271,7 @@ public class UserService {
     public MultipartFile findCVForEngineer(User user) {
         Engineer engineer = engineerRepository.findByUser(user);
         String CVName = engineer.getCvName();
-        if(CVName == null) throw new CVDoesntExistsException();
+        if(CVName == null) throw new CVDoesntExistsException("You haven't uploaded CV yet!");
         Document encryptedFile = cvFileService.loadDocument(CVName);
         Document file = cvEncryption.decrypt(encryptedFile);
         return documentConverter.convertDocumentToMultipartFile(file);
