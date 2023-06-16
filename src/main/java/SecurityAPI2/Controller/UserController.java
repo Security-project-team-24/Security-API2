@@ -10,7 +10,10 @@ import SecurityAPI2.Service.AuthService;
 import SecurityAPI2.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.asm.Advice;
+import org.apache.coyote.Response;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
@@ -19,10 +22,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.data.domain.Page;
+import org.w3c.dom.Document;
 
 
 import javax.validation.Valid;
+import java.io.Console;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -67,6 +73,20 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/block/{id}")
+    @PreAuthorize("isAuthenticated() and hasAuthority('block_user')")
+    public ResponseEntity<Void> block(@PathVariable Long id) {
+        userService.block(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/unblock/{id}")
+    @PreAuthorize("isAuthenticated() and hasAuthority('unblock_user')")
+    public ResponseEntity<Void> unblock(@PathVariable Long id) {
+        userService.unblock(id);
+        return ResponseEntity.ok().build();
+    }
+
     @PatchMapping("/disapprove/{id}/{reason}")
     @PreAuthorize("isAuthenticated() and hasAuthority('update_users_approval')")
     public ResponseEntity<Void> disapprove(@PathVariable Long id, @PathVariable final String reason) {
@@ -88,6 +108,12 @@ public class UserController {
         }
         final User user = authService.getUserFromToken(authHeader);
         userService.changePassword(user, passwordChangeDto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/forgot-password/{email}")
+    public ResponseEntity forgotPassword(@PathVariable String email) {
+        userService.forgotPassword(email);
         return ResponseEntity.ok().build();
     }
 
@@ -126,10 +152,32 @@ public class UserController {
 
     @PostMapping("/cv/upload")
     @PreAuthorize("isAuthenticated() and hasAuthority('create_cv')")
-    public ResponseEntity uploadCv(@RequestParam("file") MultipartFile file,  @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
+    public ResponseEntity uploadCv(@RequestParam("file") MultipartFile file, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
         final User user = authService.getUserFromToken(authHeader);
+        System.out.println("YOY!");
         userService.uploadCv(file, user);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/cv/download")
+    @PreAuthorize("isAuthenticated() and hasAuthority('download_cv')")
+    public ResponseEntity<?> getCv(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
+        final User user = authService.getUserFromToken(authHeader);
+        MultipartFile cv = userService.findCVForEngineer(user);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(cv.getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + cv.getName() + "\"")
+                .body(cv.getBytes());
+    }
+
+    @GetMapping("/cv/download/{fileName}")
+    @PreAuthorize("isAuthenticated() and hasAuthority('download_cv')")
+    public ResponseEntity<?> getCvByFileName(@PathVariable String fileName, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
+        MultipartFile cv = userService.findCVByName(fileName);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(cv.getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + cv.getName() + "\"")
+                .body(cv.getBytes());
     }
 
     @GetMapping("/engineers")

@@ -2,6 +2,7 @@ package SecurityAPI2.Controller;
 
 import SecurityAPI2.Crypto.SymetricKeyDecription;
 import SecurityAPI2.Dto.*;
+import SecurityAPI2.Exceptions.UserBlockedException;
 import SecurityAPI2.Exceptions.UserNotActivatedException;
 import SecurityAPI2.Model.Engineer;
 import SecurityAPI2.Model.Enum.Status;
@@ -88,6 +89,7 @@ public class AuthController {
         System.out.println(user);
         if(user == null) throw new BadCredentialsException("Bad credentials!");
         if(user.getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
+        if(user.isBlocked()) throw new UserBlockedException();
         Authentication authStrategy = new UsernamePasswordAuthenticationToken(email, password);
         Authentication authentication = authenticationManager.authenticate(authStrategy);
         SecurityContextHolder.getContext().setAuthentication(authentication);

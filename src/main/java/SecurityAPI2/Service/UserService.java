@@ -15,12 +15,14 @@ import SecurityAPI2.Model.Enum.UserRole;
 import SecurityAPI2.Repository.*;
 
 import SecurityAPI2.Security.JwtUtils;
-import SecurityAPI2.Service.Storage.IStorageService;
+import SecurityAPI2.Service.CVFile.ICVFileService;
 
 import SecurityAPI2.Service.Email.EmailService;
 
 import SecurityAPI2.utils.CryptoHelper;
 import io.github.cdimascio.dotenv.Dotenv;
+import SecurityAPI2.utils.CV.CVEncryption;
+import SecurityAPI2.utils.CV.DocumentConverter;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Document;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
@@ -48,13 +51,13 @@ public class UserService {
     private final ISkillRepository skillRepository;
     private final IEngineerRepository engineerRepository;
     private final BCryptPasswordEncoder encoder;
-    private final IStorageService storageService;
     private final EmailService emailService;
     private final IRegistrationApprovalRepository registrationApprovalRepository;
     private final IRegistrationDisapprovalRepository registrationDisapprovalRepository;
     private final JwtUtils jwtUtils;
-    private final String nameKey = Dotenv.load().get("NAME_KEY");
-
+    private final CVEncryption cvEncryption;
+    private final ICVFileService cvFileService;
+    private final DocumentConverter documentConverter;
 
     private RegistrationDisapproval save(RegistrationDisapproval registrationDisapproval) {
         return registrationDisapprovalRepository.save(registrationDisapproval);
@@ -132,7 +135,22 @@ public class UserService {
         String registerToken = jwtUtils.generateRegisterToken(user.getEmail(),registerUUID);
         RegistrationApproval registrationApproval = new RegistrationApproval(String.valueOf(registerUUID.toString().hashCode()));
         save(registrationApproval);
+        userRepository.save(user);
         emailService.sendApprovedMail(user.getEmail(),registerToken);
+    }
+    public void block(Long id) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) throw new UserDoesntExistException();
+        User user = optionalUser.get();
+        user.setBlocked(true);
+        userRepository.save(user);
+    }
+    public void unblock(Long id) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) throw new UserDoesntExistException();
+        User user = optionalUser.get();
+        user.setBlocked(false);
+        userRepository.save(user);
     }
     public void activateAccount(String registerToken){
         Claims registerClaims;
@@ -206,6 +224,16 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void forgotPassword(String email) {
+        User user = findByEmail(email);
+        if(user == null) throw new UserDoesntExistException();
+        String password = "A!" + UUID.randomUUID().toString().replace("-", "");
+        emailService.sendForgotPasswordMail(password,user.getEmail());
+        user.setPassword(encoder.encode(password));
+        user.setFirstLogged(false);
+        userRepository.save(user);
+    }
+
     public void addSkill(SkillDto skillDto, User user){
         Engineer engineer = engineerRepository.findByUser(user);
         ArrayList<Skill> skills = new ArrayList<>();
@@ -234,11 +262,38 @@ public class UserService {
         skillRepository.save(skill);
     }
 
-    public void uploadCv(MultipartFile file, User user) throws IOException {
-        String url = storageService.uploadFile(file);
+    public void uploadCv(MultipartFile multipartFile, User user) {
         Engineer engineer = engineerRepository.findByUser(user);
-        engineer.setCvUrl(url);
+        
+        if(engineer.getCvName() != null) cvFileService.deleteDocument(engineer.getCvName());
+        
+        String CVName = UUID.randomUUID().toString().replace("-", "");
+        engineer.setCvName(CVName);
+
+        Document file = null;
+        try {
+            file = documentConverter.convertMultipartFileToDocument(multipartFile);
+        } catch (Exception e) {
+            throw new DocumentConversionException();
+        }
+        Document encryptedFile = cvEncryption.encrypt(file);
+        cvFileService.saveDocument(encryptedFile,CVName);
         engineerRepository.save(engineer);
+    }
+
+    public MultipartFile findCVForEngineer(User user) {
+        Engineer engineer = engineerRepository.findByUser(user);
+        String CVName = engineer.getCvName();
+        if(CVName == null) throw new CVDoesntExistsException("You haven't uploaded CV yet!");
+        Document encryptedFile = cvFileService.loadDocument(CVName);
+        Document file = cvEncryption.decrypt(encryptedFile);
+        return documentConverter.convertDocumentToMultipartFile(file);
+    }
+
+    public MultipartFile findCVByName(String fileName) {
+        Document encryptedFile = cvFileService.loadDocument(fileName);
+        Document file = cvEncryption.decrypt(encryptedFile);
+        return documentConverter.convertDocumentToMultipartFile(file);
     }
 
     public Engineer getEngineer(User user){

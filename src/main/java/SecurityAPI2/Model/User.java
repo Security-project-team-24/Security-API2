@@ -3,6 +3,7 @@ package SecurityAPI2.Model;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.Enum.UserRole;
 import lombok.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -44,6 +45,8 @@ public class User {
     private Status status;
     @Column(name = "firstLogged")
     boolean firstLogged;
+    @Column(name = "blocked")
+    boolean blocked;
 
 
     public User(String email, String password, String name, String surname, String phoneNumber, Address address, List<Role> roles){
@@ -54,6 +57,7 @@ public class User {
         this.phoneNumber = phoneNumber;
         this.roles = new HashSet<Role>(roles);
         this.address = address;
+        this.blocked = false;
     }
 
     public boolean isApproved() {

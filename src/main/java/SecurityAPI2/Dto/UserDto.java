@@ -29,6 +29,7 @@ public class UserDto {
     boolean firstLogged;
     EngineerDto engineer;
 
+    boolean blocked;
 
     public User toModel() {
         List<Role> mappedRoles = this.roles.stream()
@@ -51,6 +52,7 @@ public class UserDto {
                 .address(mappedAddress)
                 .roles(new HashSet<>(mappedRoles))
                 .status(status)
+                .blocked(blocked)
                 .build();
     }
 
@@ -74,6 +76,7 @@ public class UserDto {
                 .map(role -> role.getName())
                 .collect(Collectors.toList());
         this.firstLogged = user.isFirstLogged();
+        this.blocked = user.isBlocked();
 
     }
 
@@ -98,6 +101,7 @@ public class UserDto {
                 .collect(Collectors.toList());
         this.firstLogged = user.isFirstLogged();
         this.engineer = engineer;
+        this.blocked = user.isBlocked();
     }
 
     public static List<UserDto> toDtos(List<User> users) {

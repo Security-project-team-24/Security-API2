@@ -6,6 +6,7 @@ import SecurityAPI2.Exceptions.TokenExceptions.InvalidTokenClaimsException;
 import SecurityAPI2.Exceptions.TokenExceptions.RefreshTokenExpiredException;
 import SecurityAPI2.Exceptions.TokenExceptions.TokenExpiredException;
 import SecurityAPI2.Exceptions.TokenExceptions.TokenInvalidException;
+import SecurityAPI2.Exceptions.UserBlockedException;
 import SecurityAPI2.Exceptions.UserDoesntExistException;
 import SecurityAPI2.Exceptions.UserNotActivatedException;
 import SecurityAPI2.Model.Enum.Status;
@@ -41,8 +42,8 @@ public class AuthService {
 
     public void createOneTimeToken(String email) {
         User user = userService.findByEmail(email);
-        if(user == null)
-            throw new UserDoesntExistException();
+        if(user == null) throw new UserDoesntExistException();
+        if(user.isBlocked()) throw new UserBlockedException();
         if(user.getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
         UUID loginTokenUUID = UUID.randomUUID();
         
@@ -60,13 +61,14 @@ public class AuthService {
         }catch(final Exception e){
             throw new TokenInvalidException("Your login link invalid");
         }
-        System.out.println(loginClaims.get("uuid").toString().hashCode());
         LoginToken loginToken = loginTokenRepository.findByHashedUuid(
                 String.valueOf(loginClaims.get("uuid").toString().hashCode())
         );
         if (loginToken == null)
             throw new TokenInvalidException("Your login link invalid");
         loginTokenRepository.delete(loginToken);
+        User user = userService.findByEmail(loginClaims.getSubject());
+        if(user.isBlocked()) throw new UserBlockedException();
         return generateTokens(loginClaims.getSubject());
     }
     public TokenDto generateTokens(String email) {
@@ -80,6 +82,8 @@ public class AuthService {
         if(!isRefreshTokenValid)
             throw new RefreshTokenExpiredException();
         String email = jwtUtils.getEmailFromJwtToken(refreshToken);
+        User user = userService.findByEmail(email);
+        if(user.isBlocked()) throw new UserBlockedException();
         String accessToken = jwtUtils.generateAccessToken(email);
         return new TokenDto(accessToken, refreshToken);
     }
@@ -100,7 +104,6 @@ public class AuthService {
     public RolePermissionsDto getRolePermissions(String role) {
         List<Permission> granted = permissionRepository.findPermissionsByRolesName(role);
         List<Permission> notGranted = permissionRepository.findPermissionsNotGranted(role);
-        System.out.println(granted.size() + " " + notGranted.size());
         return new RolePermissionsDto(notGranted, granted);
     }
 
@@ -109,7 +112,6 @@ public class AuthService {
         Role role = roleRepository.findById(name)
                 .orElseThrow(() -> new RuntimeException("No roles found with given name!"));
         role.setPermissions(new HashSet<>(permissions));
-        System.out.println(role.getPermissions().size());
         roleRepository.save(role);
     }
 

@@ -23,8 +23,8 @@ public class Engineer {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
-    @Column(name = "cvUrl", columnDefinition="TEXT")
-    private String cvUrl;
+    @Column(name = "cvName")
+    private String cvName;
     @Column(name = "seniority")
     private Seniority seniority;
     @Column(name = "hire_date", nullable = true)
