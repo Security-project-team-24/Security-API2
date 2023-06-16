@@ -11,8 +11,10 @@ import SecurityAPI2.Model.Role;
 import SecurityAPI2.Model.User;
 import SecurityAPI2.Exceptions.InvalidPasswordFormatException;
 import SecurityAPI2.Service.AuthService;
+import SecurityAPI2.Service.Authenticator.IAuthenticator;
 import SecurityAPI2.Service.UserService;
 import SecurityAPI2.utils.CryptoHelper;
+import io.github.cdimascio.dotenv.Dotenv;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
+import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,6 +44,8 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
 
     private final AuthService authService;
+    private final IAuthenticator authenticator;
+    private static final String authSecretKey = Dotenv.load().get("AUTH_SECRET_KEY");
 
 
 
@@ -98,6 +103,26 @@ public class AuthController {
         return ResponseEntity.ok(data);
     }
 
+    @PostMapping("/twofactor/login")
+    public ResponseEntity<TokenDto> twoFactorAuthenticationLogin(@Valid @RequestBody final TwoFactorAuthenticationLoginDto loginRequest, HttpServletResponse response){
+        String email = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
+        User user = userService.findByEmail(email);
+        String authSecret = SymetricKeyDecription.decrypt(user.getAuthSecret(), DatatypeConverter.parseHexBinary(authSecretKey));
+        boolean isCodeValid = authenticator.authorize(authSecret, loginRequest.getCode());
+        if (!isCodeValid) throw new BadCredentialsException("Invalid code");
+        if(user == null) throw new BadCredentialsException("Bad credentials!");
+        if(user.getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
+        Authentication authStrategy = new UsernamePasswordAuthenticationToken(email, password);
+        Authentication authentication = authenticationManager.authenticate(authStrategy);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        TokenDto data = authService.generateTokens(email);
+        Cookie cookie = createRefreshTokenCookie(data.getRefreshToken());
+        response.addCookie(cookie);
+        return ResponseEntity.ok(data);
+    }
+
     @PostMapping("/send/login/{email}")
     public ResponseEntity<Void> sendLoginEmail(@Email @PathVariable String email) {
         authService.createOneTimeToken(email);
@@ -111,6 +136,8 @@ public class AuthController {
         response.addCookie(cookie);
         return ResponseEntity.ok(data);
     }
+
+
 
     @PostMapping("/register")
     public ResponseEntity<UserDto> register(@Valid @RequestBody RegisterDto registerDto, Errors errors) {

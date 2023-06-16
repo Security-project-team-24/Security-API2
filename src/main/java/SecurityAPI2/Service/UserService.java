@@ -1,9 +1,7 @@
 package SecurityAPI2.Service;
 
 import SecurityAPI2.Crypto.SymetricKeyEncription;
-import SecurityAPI2.Dto.EngineerSkillDto;
-import SecurityAPI2.Dto.PasswordChangeDto;
-import SecurityAPI2.Dto.SkillDto;
+import SecurityAPI2.Dto.*;
 import SecurityAPI2.Exceptions.IncorrectPassword;
 import SecurityAPI2.Exceptions.TokenExceptions.InvalidTokenClaimsException;
 import SecurityAPI2.Exceptions.TokenExceptions.TokenExpiredException;
@@ -15,6 +13,8 @@ import SecurityAPI2.Model.Enum.UserRole;
 import SecurityAPI2.Repository.*;
 
 import SecurityAPI2.Security.JwtUtils;
+import SecurityAPI2.Service.Authenticator.GoogleTwoFactorAuthenticator;
+import SecurityAPI2.Service.Authenticator.IAuthenticator;
 import SecurityAPI2.Service.Storage.IStorageService;
 
 import SecurityAPI2.Service.Email.EmailService;
@@ -24,7 +24,6 @@ import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
-import SecurityAPI2.Dto.RegisterDto;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
 
@@ -53,8 +52,8 @@ public class UserService {
     private final IRegistrationApprovalRepository registrationApprovalRepository;
     private final IRegistrationDisapprovalRepository registrationDisapprovalRepository;
     private final JwtUtils jwtUtils;
+    private final IAuthenticator twoFactorAuthenticator;
     private final String nameKey = Dotenv.load().get("NAME_KEY");
-
 
     private RegistrationDisapproval save(RegistrationDisapproval registrationDisapproval) {
         return registrationDisapprovalRepository.save(registrationDisapproval);
@@ -89,6 +88,7 @@ public class UserService {
         }
 
         user = initializeUser(registerDto);
+
         user = userRepository.save(user);
         if(user.hasRole(UserRole.ENGINEER)){
             Engineer engineer = new Engineer(user, registerDto.getSeniority());
@@ -104,14 +104,18 @@ public class UserService {
             throw new RolesEmptyException();
         }
         roles.add(new Role(dtoRoles.get(0)));
+        TwoFACredentials credentials = twoFactorAuthenticator.generateCredentials(registerDto.getEmail());
+
         User user = new User(
                 registerDto.getEmail(), encoder.encode(registerDto.getPassword()),
                 registerDto.getName(),
-                registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getAddress(), roles
+                registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getAddress(), roles, credentials.getKey()
         );
         user = CryptoHelper.encryptUser(user);
         user.setFirstLogged(user.hasRole(UserRole.ADMIN));
         user.setStatus(user.hasRole(UserRole.ADMIN) ? Status.ACTIVATED : Status.PENDING);
+        emailService.sendQrCode(registerDto.getEmail(), credentials.getQrCodeUrl());
+
         return user;
     }
 
