@@ -7,4 +7,6 @@ public interface IEmailService {
 
     void sendDisapprovedMail(String reason, String email);
 
+    void sendWarningEmail(String message, String subject);
+
 }

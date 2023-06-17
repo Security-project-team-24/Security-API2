@@ -17,6 +17,8 @@ import SecurityAPI2.Service.UserService;
 import SecurityAPI2.utils.CryptoHelper;
 import io.github.cdimascio.dotenv.Dotenv;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,6 +49,7 @@ public class AuthController {
     private final AuthService authService;
     private final IAuthenticator authenticator;
     private static final String authSecretKey = Dotenv.load().get("AUTH_SECRET_KEY");
+    private final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
 
 
@@ -72,8 +75,11 @@ public class AuthController {
     @PostMapping("/permissions/{role}/commit")
     public ResponseEntity<?> commitPermissions(
             @PathVariable String role,
-            @RequestBody List<Permission> permissionsGranted
+            @RequestBody List<Permission> permissionsGranted,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader
     ) {
+        User user = authService.getUserFromToken(authHeader);
+        logger.info("[PERMISSIONS_COMMITTED] User:" + user.getEmail());
 
         boolean containsAdministration = permissionsGranted.stream().anyMatch(p -> p.getName().equals("administration"));
         if(!containsAdministration && role.equals("ADMIN")) {
@@ -89,15 +95,21 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody final LoginDto loginRequest, HttpServletResponse response) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
-        System.out.println("stigaop");
         User user = userService.findByEmail(email);
-        System.out.println(user);
-        if(user == null) throw new BadCredentialsException("Bad credentials!");
-        if(user.getStatus() != Status.ACTIVATED) throw new UserNotActivatedException();
+        logger.info("User " + email + " authenticating");
+        if(user == null) {
+            logger.info("User doesn't exist");
+            throw new BadCredentialsException("Bad credentials!");
+        }
+        if(user.isNotActivated()) throw new UserNotActivatedException();
+
         if(user.isBlocked()) throw new UserBlockedException();
+
         Authentication authStrategy = new UsernamePasswordAuthenticationToken(email, password);
         Authentication authentication = authenticationManager.authenticate(authStrategy);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        logger.info("User " + email + " has successfully logged in");
 
         TokenDto data = authService.generateTokens(email);
         Cookie cookie = createRefreshTokenCookie(data.getRefreshToken());
@@ -180,6 +192,9 @@ public class AuthController {
     }
 
     private String getCookie(HttpServletRequest req, String name) {
+        if(req.getCookies() == null) {
+            return null;
+        }
         return Arrays.stream(req.getCookies())
                 .filter(cookie -> cookie.getName().equals(name))
                 .map(Cookie::getValue)

@@ -62,6 +62,7 @@ public class SecurityConfig {
 		http.cors().and().csrf().disable()
 			.exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+			.authorizeRequests().antMatchers("/socket/**").permitAll().and()
 			.authorizeRequests().antMatchers("/**").permitAll().and()
 			.authorizeRequests().antMatchers("/auth/login").permitAll().and()
 			.authorizeRequests().antMatchers("/auth/passwordless/login/**").permitAll().and()
