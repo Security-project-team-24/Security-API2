@@ -32,6 +32,7 @@ public class User {
     @Column(name = "phoneNumber")
     private String phoneNumber;
 
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",
@@ -48,6 +49,8 @@ public class User {
     @Column(name = "blocked")
     boolean blocked;
 
+    @Column(name = "authSecret")
+    private String authSecret;
 
     public User(String email, String password, String name, String surname, String phoneNumber, Address address, List<Role> roles){
         this.email = email;
@@ -58,6 +61,17 @@ public class User {
         this.roles = new HashSet<Role>(roles);
         this.address = address;
         this.blocked = false;
+    }
+
+    public User(String email, String password, String name, String surname, String phoneNumber, Address address, List<Role> roles, String authSecret){
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.surname = surname;
+        this.phoneNumber = phoneNumber;
+        this.roles = new HashSet<Role>(roles);
+        this.address = address;
+        this.authSecret = authSecret;
     }
 
     public boolean isApproved() {
