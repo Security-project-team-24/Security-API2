@@ -63,7 +63,6 @@ public class SecurityConfig {
 			.exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 			.authorizeRequests().antMatchers("/socket/**").permitAll().and()
-			.authorizeRequests().antMatchers("/**").permitAll().and()
 			.authorizeRequests().antMatchers("/auth/login").permitAll().and()
 			.authorizeRequests().antMatchers("/auth/passwordless/login/**").permitAll().and()
 			.authorizeRequests().antMatchers("/auth/send/login/**").permitAll().and()

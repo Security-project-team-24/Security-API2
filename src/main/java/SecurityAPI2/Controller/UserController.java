@@ -189,12 +189,8 @@ public class UserController {
                                                                 @Valid @RequestParam String fromDate,
                                                                 @Valid @RequestParam String toDate){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        Page<Engineer> engineerPage = userService.getEngineers(pageNumber, email.trim(), name.trim(), surname.trim(), LocalDate.parse(fromDate, formatter), LocalDate.parse(toDate, formatter));
-        List<EngineerDto> engineers = EngineerDto.engineerDtosFromEngineers(engineerPage.getContent());
-        PageDto<EngineerDto> dto = new PageDto<>();
-        dto.setContent(engineers);
-        dto.setTotalPages(engineerPage.getTotalPages());
-        return ResponseEntity.ok(dto);
+        PageDto<EngineerDto> page = userService.getEngineers(pageNumber, email.trim(), name.trim(), surname.trim(), LocalDate.parse(fromDate, formatter), LocalDate.parse(toDate, formatter));
+        return ResponseEntity.ok(page);
     }
 
 

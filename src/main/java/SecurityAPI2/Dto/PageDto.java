@@ -8,7 +8,6 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-@Data
 public class PageDto<T> {
     List<T> content;
     int totalPages;
