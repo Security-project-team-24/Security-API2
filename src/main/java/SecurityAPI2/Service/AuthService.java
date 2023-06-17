@@ -19,6 +19,7 @@ import SecurityAPI2.Repository.IPermissionRepository;
 import SecurityAPI2.Repository.IRoleRepository;
 import SecurityAPI2.Security.JwtUtils;
 import SecurityAPI2.Service.Email.IEmailService;
+import SecurityAPI2.utils.CryptoHelper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class AuthService {
     private final IEmailService emailService;
     private final IRoleRepository roleRepository;
     private final IPermissionRepository permissionRepository;
+
 
     public void createOneTimeToken(String email) {
         User user = userService.findByEmail(email);
@@ -92,7 +94,7 @@ public class AuthService {
         User user = userService.findByEmail(email);
         if (user == null)
             throw new InvalidTokenClaimsException();
-        return user;
+        return CryptoHelper.decryptUser(user);
     }
 
     public List<Role> getRoles() {
@@ -119,6 +121,8 @@ public class AuthService {
         if(chunks.length < 2) return null;
         return chunks[1];
     }
+
+
 
 
 }

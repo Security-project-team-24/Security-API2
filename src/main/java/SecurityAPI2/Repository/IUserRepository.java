@@ -22,6 +22,7 @@ public interface IUserRepository extends JpaRepository<User, Long> {
 
 
 
+
     @Query(nativeQuery = true, value = """
       SELECT DISTINCT u.* 
       FROM 

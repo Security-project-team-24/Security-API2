@@ -1,8 +1,7 @@
 package SecurityAPI2.Service;
 
-import SecurityAPI2.Dto.EngineerSkillDto;
-import SecurityAPI2.Dto.PasswordChangeDto;
-import SecurityAPI2.Dto.SkillDto;
+import SecurityAPI2.Crypto.SymetricKeyEncription;
+import SecurityAPI2.Dto.*;
 import SecurityAPI2.Exceptions.IncorrectPassword;
 import SecurityAPI2.Exceptions.TokenExceptions.InvalidTokenClaimsException;
 import SecurityAPI2.Exceptions.TokenExceptions.TokenExpiredException;
@@ -15,15 +14,19 @@ import SecurityAPI2.Repository.*;
 
 import SecurityAPI2.Security.JwtUtils;
 import SecurityAPI2.Service.CVFile.ICVFileService;
+import SecurityAPI2.Service.Authenticator.GoogleTwoFactorAuthenticator;
+import SecurityAPI2.Service.Authenticator.IAuthenticator;
+import SecurityAPI2.Service.Storage.IStorageService;
 
 import SecurityAPI2.Service.Email.EmailService;
 
+import SecurityAPI2.utils.CryptoHelper;
+import io.github.cdimascio.dotenv.Dotenv;
 import SecurityAPI2.utils.CV.CVEncryption;
 import SecurityAPI2.utils.CV.DocumentConverter;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
-import SecurityAPI2.Dto.RegisterDto;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
 
@@ -34,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.w3c.dom.Document;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -54,6 +58,7 @@ public class UserService {
     private final CVEncryption cvEncryption;
     private final ICVFileService cvFileService;
     private final DocumentConverter documentConverter;
+    private final IAuthenticator twoFactorAuthenticator;
 
     private RegistrationDisapproval save(RegistrationDisapproval registrationDisapproval) {
         return registrationDisapprovalRepository.save(registrationDisapproval);
@@ -88,6 +93,7 @@ public class UserService {
         }
 
         user = initializeUser(registerDto);
+
         user = userRepository.save(user);
         if(user.hasRole(UserRole.ENGINEER)){
             Engineer engineer = new Engineer(user, registerDto.getSeniority());
@@ -103,19 +109,28 @@ public class UserService {
             throw new RolesEmptyException();
         }
         roles.add(new Role(dtoRoles.get(0)));
+        TwoFACredentials credentials = twoFactorAuthenticator.generateCredentials(registerDto.getEmail());
 
         User user = new User(
                 registerDto.getEmail(), encoder.encode(registerDto.getPassword()),
                 registerDto.getName(),
-                registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getAddress(), roles
+                registerDto.getSurname(), registerDto.getPhoneNumber(), registerDto.getAddress(), roles, credentials.getKey()
         );
+        user = CryptoHelper.encryptUser(user);
         user.setFirstLogged(user.hasRole(UserRole.ADMIN));
         user.setStatus(user.hasRole(UserRole.ADMIN) ? Status.ACTIVATED : Status.PENDING);
+        emailService.sendQrCode(registerDto.getEmail(), credentials.getQrCodeUrl());
+
         return user;
     }
-    
+
+
     public Page<User> findAll(int pageNumber, int pageSize) {
-        return userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber), Status.ACTIVATED);
+        Page<User> users = userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber), Status.ACTIVATED);
+        for(User user : users) {
+           CryptoHelper.decryptUser(user);
+        }
+        return users;
     }
     public void approve(Long id) {
         Optional<User> optionalUser = userRepository.findById(id);
@@ -183,7 +198,11 @@ public class UserService {
     }
 
     public Page<User> findPendingUsers(int pageNumber, int pageSize) {
-        return userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber),Status.PENDING);
+        Page<User> users = userRepository.findAllByStatus(PageRequest.of(pageSize, pageNumber),Status.PENDING);
+        for(User user : users) {
+            CryptoHelper.decryptUser(user);
+        }
+        return users;
     }
     public User update(final User newUser) {
         final User user = userRepository.findById(newUser.getId()).get();
@@ -195,7 +214,7 @@ public class UserService {
         user.getAddress().setCity(newUser.getAddress().getCity());
         user.getAddress().setZipCode(newUser.getAddress().getZipCode());
         user.getAddress().setCountry(newUser.getAddress().getCountry());
-
+        CryptoHelper.encryptUser(user);
         return userRepository.save(user);
     }
 
@@ -294,6 +313,7 @@ public class UserService {
                                        LocalDate fromDate,
                                        LocalDate toDate) {
         Page<Engineer> page =  engineerRepository.findByUserEmailContainingIgnoreCaseAndUserNameContainingIgnoreCaseAndUserSurnameContainingIgnoreCaseAndHireDateBetween(email, name, surname, fromDate, toDate, PageRequest.of(pageNumber, 10));
+        CryptoHelper.decryptEngineers(page.getContent());
         return page;
     }
 }
