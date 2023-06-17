@@ -14,7 +14,7 @@ public class LoggerInterceptor implements HandlerInterceptor {
 
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String route = request.getRequestURI();
-        logger.info("Route: " + route + " Method: " + request.getMethod() +  " Ip: " + request.getRemoteAddr());
+        logger.info("Route: " + route + ", Type: REQUEST" + ", Method: " + request.getMethod() +  ", Ip: " + request.getRemoteAddr());
         return true;
     }
 
@@ -23,6 +23,6 @@ public class LoggerInterceptor implements HandlerInterceptor {
                                 Exception ex) {
         int statusCode = response.getStatus();
         String route = request.getRequestURI();
-        logger.info("Route: " + route + ", Status Code: " + statusCode);
+        logger.info("Route: " + route+ ", Type: RESPONSE" + ", Status Code: " + statusCode);
     }
 }

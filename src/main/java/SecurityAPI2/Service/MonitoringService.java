@@ -1,5 +1,10 @@
 package SecurityAPI2.Service;
 
+import SecurityAPI2.Service.Email.IEmailService;
+import SecurityAPI2.utils.LogModel;
+import ch.qos.logback.core.net.SyslogOutputStream;
+import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -7,63 +12,91 @@ import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class MonitoringService {
 
+    private final IEmailService emailService;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
 
-
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 20000)
     void analyseThreats() {
-        List<String> lines = readLogFile();
+        List<LogModel> lines = readLogFile();
         LocalDateTime minutesAgo = LocalDateTime.now().minusMinutes(10);
         LocalDateTime now = LocalDateTime.now().plusMinutes(1);
-
-        List<String> filtered = extractForAPeriod(lines, minutesAgo, now);
+        List<LogModel> filtered = extractForAPeriod(lines, minutesAgo, now);
+        HashMap<String, Integer> loginAttempts = mapLoginAttempts(filtered);
+        warnIfLoginAttemptNotNormal(loginAttempts);
+        warnIfPermissionsUpdated(filtered);
     }
 
-    List<String> extractForAPeriod(List<String> logs, LocalDateTime from, LocalDateTime to) {
-        return logs.stream().filter(log -> {
-            if(log == null) return false;
-            String[] chunks = log.split(" ");
-            String date = chunks[0];
-            String time = chunks[1];
-            String timeFiltered = time.split(",")[0];
-            String result = date + " " +timeFiltered;
-            String pattern = "yyyy-MM-dd HH:mm:ss";
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
-            try {
-                LocalDateTime dt = LocalDateTime.parse(result, formatter);
-                return dt.isAfter(from) && dt.isBefore(to);
-            } catch(Exception e) {
-                return false;
+    HashMap<String, Integer> mapLoginAttempts(List<LogModel> logs) {
+        HashMap<String, Integer> loginAttempts = new HashMap<>();
+
+        logs.forEach(log -> {
+            if(!log.isLoginAttempt()) return;
+            String ipAddress = log.getIpAddress();
+            if(!loginAttempts.containsKey(ipAddress)) {
+                loginAttempts.put(ipAddress, 0);
             }
-
-
-        }).toList();
+            loginAttempts.put(ipAddress, loginAttempts.get(ipAddress) + 1);
+        });
+        return loginAttempts;
     }
 
-    List<String> readLogFile() {
+    void warnIfPermissionsUpdated(List<LogModel> logs) {
+        logs.forEach(log -> {
+            if(!log.isPermissionCommitted()) return;
+            String message = log.getEmailFromPermissionCommittedMessage() + " updated permissions!";
+            String subject = "Permissions updated";
+            emailService.sendWarningEmail(message,subject);
+            simpMessagingTemplate.convertAndSend("/topic/notification", message);
+        });
+    }
+
+    void warnIfLoginAttemptNotNormal(HashMap<String, Integer> loginAttempts) {
+        Set<String> keys = loginAttempts.keySet();
+        keys.forEach(key -> {
+            int value = loginAttempts.get(key);
+            if (value > 10) {
+                String message = "Ip address: " + key + "has attempted login " + value + " times in last 10 minutes";
+                String subject = "Login attempts warning!";
+                emailService.sendWarningEmail(message, subject);
+                simpMessagingTemplate.convertAndSend("/topic/notification", message);
+            }
+        });
+
+    }
+
+    List<LogModel> extractForAPeriod(List<LogModel> logs, LocalDateTime from, LocalDateTime to) {
+        return logs.stream()
+                .filter(log->log.isInPeriod(from,to))
+                .toList();
+    }
+
+    List<LogModel> readLogFile() {
         BufferedReader reader;
-        List<String> lines = new ArrayList<>();
+        List<LogModel> lines = new ArrayList<>();
         try {
             reader = new BufferedReader(new FileReader("./logs/spring-boot-logger.log"));
             String line = reader.readLine();
-
             while (line != null) {
-                System.out.println(line);
                 line = reader.readLine();
-
-                lines.add(line);
+                if (line == null) continue;
+                LogModel log = LogModel.parse(line);
+                if(log != null)
+                    lines.add(log);
             }
             reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return lines;
 
     }

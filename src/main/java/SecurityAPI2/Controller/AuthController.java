@@ -75,8 +75,11 @@ public class AuthController {
     @PostMapping("/permissions/{role}/commit")
     public ResponseEntity<?> commitPermissions(
             @PathVariable String role,
-            @RequestBody List<Permission> permissionsGranted
+            @RequestBody List<Permission> permissionsGranted,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader
     ) {
+        User user = authService.getUserFromToken(authHeader);
+        logger.info("[PERMISSIONS_COMMITTED] User:" + user.getEmail());
 
         boolean containsAdministration = permissionsGranted.stream().anyMatch(p -> p.getName().equals("administration"));
         if(!containsAdministration && role.equals("ADMIN")) {
@@ -189,6 +192,9 @@ public class AuthController {
     }
 
     private String getCookie(HttpServletRequest req, String name) {
+        if(req.getCookies() == null) {
+            return null;
+        }
         return Arrays.stream(req.getCookies())
                 .filter(cookie -> cookie.getName().equals(name))
                 .map(Cookie::getValue)
