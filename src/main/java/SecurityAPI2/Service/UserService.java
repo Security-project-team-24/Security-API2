@@ -97,6 +97,7 @@ public class UserService {
         user = userRepository.save(user);
         if(user.hasRole(UserRole.ENGINEER)){
             Engineer engineer = new Engineer(user, registerDto.getSeniority());
+            engineer.setHireDate(LocalDate.now());
             engineerRepository.save(engineer);
         }
         return user;
@@ -227,7 +228,8 @@ public class UserService {
         }
         user.setPassword(encoder.encode(passwordChangeDto.getNewPassword()));
         user.setFirstLogged(false);
-        userRepository.save(user);
+        User encryptedUser = CryptoHelper.encryptUser(user);
+        userRepository.save(encryptedUser);
     }
 
     public void forgotPassword(String email) {
