@@ -19,7 +19,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 		if (user == null) {
 			throw new UsernameNotFoundException(email);
 		}
-		System.out.println("stigao!");
 		if (user.isBlocked()) {
 			throw new UserBlockedException();
 		}

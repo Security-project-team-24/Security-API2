@@ -84,4 +84,5 @@ public class User {
     }
 
     public boolean isActivated() { return this.status == Status.ACTIVATED;}
+    public boolean isNotActivated() { return this.status != Status.ACTIVATED; }
 }

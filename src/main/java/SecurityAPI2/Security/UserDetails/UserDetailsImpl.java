@@ -32,8 +32,8 @@ public class UserDetailsImpl implements UserDetails {
 	public static UserDetailsImpl build(final User user) {
 		final List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-		user.getRoles().stream().forEach((role -> {
-			role.getPermissions().stream().forEach(permission -> {
+		user.getRoles().forEach((role -> {
+			role.getPermissions().forEach(permission -> {
 				authorities.add(new SimpleGrantedAuthority(permission.getName()));
 			});
 		}));

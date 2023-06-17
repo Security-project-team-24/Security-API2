@@ -47,7 +47,7 @@ public class ProjectEmployeeController {
     public ResponseEntity<ProjectEmployeeDto> updateJobDescription(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader, @Valid @RequestBody UpdateEngineerProjectDto updateEngineerProjectDto) {
         final User user = authService.getUserFromToken(authHeader);
         ProjectEmployee updatedProjectEmployee = projectEmployeeService.updateJobDescription(user, updateEngineerProjectDto.getProjectId(), updateEngineerProjectDto.getDescription());
-       ProjectEmployeeDto dto = new ProjectEmployeeDto(updatedProjectEmployee);
+        ProjectEmployeeDto dto = new ProjectEmployeeDto(updatedProjectEmployee);
         return ResponseEntity.ok(dto);
     }
 
