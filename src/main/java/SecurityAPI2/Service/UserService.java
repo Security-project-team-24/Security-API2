@@ -30,8 +30,10 @@ import lombok.RequiredArgsConstructor;
 import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
 
+import org.apache.catalina.Engine;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,6 +45,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -308,14 +311,28 @@ public class UserService {
         return engineerRepository.findByUser(user);
     }
 
-    public Page<Engineer> getEngineers(int pageNumber,
+    public PageDto<EngineerDto> getEngineers(int pageNumber,
                                        String email,
                                        String name,
                                        String surname,
                                        LocalDate fromDate,
                                        LocalDate toDate) {
-        Page<Engineer> page =  engineerRepository.findByUserEmailContainingIgnoreCaseAndUserNameContainingIgnoreCaseAndUserSurnameContainingIgnoreCaseAndHireDateBetween(email, name, surname, fromDate, toDate, PageRequest.of(pageNumber, 10));
-        CryptoHelper.decryptEngineers(page.getContent());
+        List<Engineer> engineers =  engineerRepository.findByUserEmailContainingIgnoreCaseAndHireDateBetween(email, fromDate, toDate);
+        engineers = CryptoHelper.decryptEngineers(engineers);
+        List<Engineer> filteredEngineers = new ArrayList<>();
+        for (Engineer e: engineers) {
+            if (e.getUser().getName().toLowerCase().contains(name.toLowerCase()) && e.getUser().getSurname().toLowerCase().contains(surname.toLowerCase())) {
+                filteredEngineers.add(e);
+            }
+        }
+        Pageable pageable = PageRequest.of(pageNumber, 10);
+        PageDto<EngineerDto> page = new PageDto<>();
+        page.setTotalPages((int) Math.ceil((double) filteredEngineers.size() / 10));
+        List<EngineerDto> dtos = EngineerDto.engineerDtosFromEngineers(filteredEngineers.stream()
+                .skip(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .collect(Collectors.toList()));
+        page.setContent(dtos);
         return page;
     }
 }
