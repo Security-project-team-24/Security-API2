@@ -154,7 +154,6 @@ public class UserController {
     @PreAuthorize("isAuthenticated() and hasAuthority('create_cv')")
     public ResponseEntity uploadCv(@RequestParam("file") MultipartFile file, @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) throws IOException {
         final User user = authService.getUserFromToken(authHeader);
-        System.out.println("YOY!");
         userService.uploadCv(file, user);
         return ResponseEntity.ok().build();
     }

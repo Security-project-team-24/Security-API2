@@ -20,10 +20,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MonitoringService {
 
-    private final IEmailService emailService;
+    private final IEmailService emailService; 
     private final SimpMessagingTemplate simpMessagingTemplate;
 
-
+    @Scheduled(fixedDelay = 20000)
     void analyseThreats() {
         List<LogModel> lines = readLogFile();
         LocalDateTime minutesAgo = LocalDateTime.now().minusMinutes(10);

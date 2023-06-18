@@ -79,6 +79,7 @@ public class AuthController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader
     ) {
         User user = authService.getUserFromToken(authHeader);
+        user = CryptoHelper.encryptUser(user);
         logger.info("[PERMISSIONS_COMMITTED] User:" + user.getEmail());
 
         boolean containsAdministration = permissionsGranted.stream().anyMatch(p -> p.getName().equals("administration"));
@@ -167,11 +168,8 @@ public class AuthController {
     public ResponseEntity<UserDto> current(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
         User user = authService.getUserFromToken(authHeader);
         if(user.hasRole(UserRole.ENGINEER)){
-            System.out.println("dosao");
             Engineer engineer = userService.getEngineer(user);
-            System.out.println("dosao1");
             UserDto userDto = new UserDto(user, new EngineerDto(engineer));
-            System.out.println("dosao2");
 
             return ResponseEntity.ok(userDto);
         }
