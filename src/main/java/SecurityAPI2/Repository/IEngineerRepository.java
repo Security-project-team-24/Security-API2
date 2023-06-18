@@ -1,6 +1,7 @@
 package SecurityAPI2.Repository;
 
 import SecurityAPI2.Model.Engineer;
+import SecurityAPI2.Model.Enum.Status;
 import SecurityAPI2.Model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,5 +13,5 @@ import java.util.List;
 
 public interface IEngineerRepository extends JpaRepository<Engineer, Long> {
     Engineer findByUser(User user);
-    List<Engineer> findByUserEmailContainingIgnoreCaseAndHireDateBetween(String email, LocalDate fromDate, LocalDate toDate);
+    List<Engineer> findByUserStatusAndUserEmailContainingIgnoreCaseAndHireDateBetween(Status status, String email, LocalDate fromDate, LocalDate toDate);
 }
