@@ -317,7 +317,7 @@ public class UserService {
                                        String surname,
                                        LocalDate fromDate,
                                        LocalDate toDate) {
-        List<Engineer> engineers =  engineerRepository.findByUserEmailContainingIgnoreCaseAndHireDateBetween(email, fromDate, toDate);
+        List<Engineer> engineers =  engineerRepository.findByUserStatusAndUserEmailContainingIgnoreCaseAndHireDateBetween(Status.ACTIVATED, email, fromDate, toDate);
         engineers = CryptoHelper.decryptEngineers(engineers);
         List<Engineer> filteredEngineers = new ArrayList<>();
         for (Engineer e: engineers) {
