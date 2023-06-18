@@ -55,7 +55,7 @@ public class EmailService implements IEmailService{
     @Override
     public void sendWarningEmail(String message, String subject) {
         EmailDetails details = new EmailDetails();
-        details.setRecipient("stjepanovicsrdjan2000@gmail.com");
+        details.setRecipient("dusanjanosevic007@gmail.com");
         details.setMsgBody(message);
         details.setSubject(subject);
         emails.add(details);

@@ -256,6 +256,7 @@ public class UserService {
             skills.add(new Skill(s.getSkill(), s.getStrength(), engineer));
         }
         engineer.setSkills(skills);
+        engineer.setUser(CryptoHelper.encryptUser(engineer.getUser()));
         userRepository.save(user);
     }
 

@@ -121,8 +121,4 @@ public class AuthService {
         if(chunks.length < 2) return null;
         return chunks[1];
     }
-
-
-
-
 }
