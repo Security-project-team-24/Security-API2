@@ -20,7 +20,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MonitoringService {
 
-    private final IEmailService emailService;
+    private final IEmailService emailService; 
     private final SimpMessagingTemplate simpMessagingTemplate;
 
 

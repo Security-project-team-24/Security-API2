@@ -242,7 +242,8 @@ public class UserService {
         emailService.sendForgotPasswordMail(password,user.getEmail());
         user.setPassword(encoder.encode(password));
         user.setFirstLogged(false);
-        userRepository.save(user);
+        User encryptedUser = CryptoHelper.encryptUser(user);
+        userRepository.save(encryptedUser);
     }
 
     public void addSkill(SkillDto skillDto, User user){
@@ -289,6 +290,7 @@ public class UserService {
         }
         Document encryptedFile = cvEncryption.encrypt(file);
         cvFileService.saveDocument(encryptedFile,CVName);
+        engineer.setUser(CryptoHelper.encryptUser(engineer.getUser()));
         engineerRepository.save(engineer);
     }
 
